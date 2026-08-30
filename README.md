@@ -4,16 +4,31 @@ Modular Cubed-Style Universal GUI Architecture for Roblox client environments.
 
 ## Quick Execution
 
-Execute directly via your executor:
-
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/FIHHHH2/Fih-Menu/main/init.lua?t=" .. tick()))()
 ```
 
-## Architecture Pillars
+## Directory Structure
 
-- **Base Windowing**: State-driven draggable windows, viewport margin snapping, triangle resize grip, Z-Index stacking.
-- **Micro-Interactions**: Spring & quad animation curves for button hover, click bounce, and tab sliding.
-- **CoreGui Replacements**: Custom chat subsystem with waveform voice amplitude visualizer and domino-animated player list with player context drawer.
-- **Music & Media Overlay**: 16-bar frequency visualizer with synced LRC lyrics engine and dynamic color theme adaptation.
-- **Advantage Modules**: LinearVelocity flight, stepped platform floater, walk fling physics desync, noclip loop, and metatable hooks.
+```
+Fih-Menu/
+├── Core/
+│   ├── Signal.lua               -- Fast event dispatcher
+│   ├── ThemeManager.lua         -- Color token state & adaptive styling
+│   └── WindowBase.lua           -- Base dragging, resizing, and layering class
+├── Interface/
+│   ├── MainMenu.lua             -- Navigation rail, categorized card grid, toggles & sliders
+│   ├── CustomChat.lua           -- CoreGui Chat replacement with waveform monitor
+│   ├── CustomPlayerList.lua     -- Domino leaderboard & context drawer
+│   └── MusicWidget.lua          -- 16-bar visualizer & lyrics scroller
+├── Modules/
+│   ├── FlightController.lua     -- LinearVelocity body mover flight
+│   ├── PlatformFloater.lua      -- Stepped platform descent
+│   ├── FlingController.lua      -- Rotational physics desync
+│   ├── CharacterMods.lua        -- Speed, jump, infinite jump & noclip loop
+│   └── MediaBridgeClient.lua    -- Localhost HTTP media synchronizer
+├── Storage/
+│   ├── ConfigManager.lua        -- JSON configuration save/load
+│   └── KeybindRegistry.lua      -- Global hotkey manager
+└── init.lua                     -- Dynamic module bootstrapper
+```
