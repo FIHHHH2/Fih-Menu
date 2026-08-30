@@ -1,5 +1,5 @@
 -- Modules/FlightController.lua
--- Body Mover LinearVelocity Flight Controller
+-- LinearVelocity 3D Vector Flight Module
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -33,12 +33,12 @@ function FlightController.Enable()
     FlightController.Enabled = true
 
     local att = Instance.new("Attachment")
-    att.Name = "FihFly_Attachment"
+    att.Name = "FihFly_Att"
     att.Parent = root
     FlightController.Attachment = att
 
     local lv = Instance.new("LinearVelocity")
-    lv.Name = "FihFly_LinearVelocity"
+    lv.Name = "FihFly_LV"
     lv.Attachment0 = att
     lv.MaxForce = 1e6
     lv.VectorVelocity = Vector3.zero

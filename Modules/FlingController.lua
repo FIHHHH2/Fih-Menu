@@ -1,5 +1,5 @@
 -- Modules/FlingController.lua
--- Rotational Physics Desync & Target Collision Fling
+-- Rotational Physics Desync & Collision Fling
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")

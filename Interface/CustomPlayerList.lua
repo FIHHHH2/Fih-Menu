@@ -1,5 +1,5 @@
 -- Interface/CustomPlayerList.lua
--- CoreGui Player List Replacement with Domino Ingestion and Context Drawer
+-- Translucent Domino-Animated Leaderboard & Player Context Drawer
 
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
@@ -14,11 +14,11 @@ local CustomPlayerList = {}
 function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManager: any, signalMod: any, flingMod: any)
     pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end)
 
-    local PlrWindow = windowBase.new("Players : 0 online", UDim2.new(0, 220, 0, 260), UDim2.new(1, -240, 0, 30), Vector2.new(200, 180), screenHost, themeManager, signalMod)
+    local PlrWindow = windowBase.new("Players : 0 online", UDim2.new(0, 230, 0, 280), UDim2.new(1, -250, 0, 30), Vector2.new(200, 180), screenHost, themeManager, signalMod)
 
     local PlayerScroll = Instance.new("ScrollingFrame")
-    PlayerScroll.Size = UDim2.new(1, -8, 1, -8)
-    PlayerScroll.Position = UDim2.new(0, 4, 0, 4)
+    PlayerScroll.Size = UDim2.new(1, -12, 1, -12)
+    PlayerScroll.Position = UDim2.new(0, 6, 0, 6)
     PlayerScroll.BackgroundTransparency = 1
     PlayerScroll.BorderSizePixel = 0
     PlayerScroll.ScrollBarThickness = 3
@@ -31,17 +31,22 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     PlrLayout.Padding = UDim.new(0, 4)
     PlrLayout.Parent = PlayerScroll
 
-    -- Context Drawer Window
-    local DrawerWindow = windowBase.new("Select Plr", UDim2.new(0, 170, 0, 220), UDim2.new(1, -420, 0, 30), Vector2.new(160, 180), screenHost, themeManager, signalMod)
+    -- Context Drawer Window (Translucent & Movable)
+    local DrawerWindow = windowBase.new("Select Plr", UDim2.new(0, 180, 0, 230), UDim2.new(1, -440, 0, 30), Vector2.new(160, 180), screenHost, themeManager, signalMod)
     DrawerWindow.Frame.Visible = false
 
     local DrawerContent = DrawerWindow.Content
     local AvatarImg = Instance.new("ImageLabel")
-    AvatarImg.Size = UDim2.new(0, 50, 0, 50)
-    AvatarImg.Position = UDim2.new(0, 6, 0, 6)
+    AvatarImg.Size = UDim2.new(0, 52, 0, 52)
+    AvatarImg.Position = UDim2.new(0, 8, 0, 8)
     AvatarImg.BackgroundColor3 = themeManager.Get("Surface")
+    AvatarImg.BackgroundTransparency = 0.3
     AvatarImg.BorderSizePixel = 0
     AvatarImg.Parent = DrawerContent
+
+    local AvatarCorner = Instance.new("UICorner")
+    AvatarCorner.CornerRadius = UDim.new(0, 4)
+    AvatarCorner.Parent = AvatarImg
 
     local AvatarStroke = Instance.new("UIStroke")
     AvatarStroke.Thickness = 1
@@ -49,8 +54,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     AvatarStroke.Parent = AvatarImg
 
     local PlrNameLabel = Instance.new("TextLabel")
-    PlrNameLabel.Size = UDim2.new(1, -66, 0, 24)
-    PlrNameLabel.Position = UDim2.new(0, 62, 0, 6)
+    PlrNameLabel.Size = UDim2.new(1, -70, 0, 24)
+    PlrNameLabel.Position = UDim2.new(0, 66, 0, 8)
     PlrNameLabel.BackgroundTransparency = 1
     PlrNameLabel.Font = Enum.Font.Code
     PlrNameLabel.Text = "Name"
@@ -60,8 +65,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     PlrNameLabel.Parent = DrawerContent
 
     local PlrIdLabel = Instance.new("TextLabel")
-    PlrIdLabel.Size = UDim2.new(1, -66, 0, 20)
-    PlrIdLabel.Position = UDim2.new(0, 62, 0, 30)
+    PlrIdLabel.Size = UDim2.new(1, -70, 0, 20)
+    PlrIdLabel.Position = UDim2.new(0, 66, 0, 32)
     PlrIdLabel.BackgroundTransparency = 1
     PlrIdLabel.Font = Enum.Font.Code
     PlrIdLabel.Text = "ID: 0"
@@ -71,8 +76,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     PlrIdLabel.Parent = DrawerContent
 
     local DrawerActionContainer = Instance.new("Frame")
-    DrawerActionContainer.Size = UDim2.new(1, -12, 1, -64)
-    DrawerActionContainer.Position = UDim2.new(0, 6, 0, 60)
+    DrawerActionContainer.Size = UDim2.new(1, -16, 1, -68)
+    DrawerActionContainer.Position = UDim2.new(0, 8, 0, 64)
     DrawerActionContainer.BackgroundTransparency = 1
     DrawerActionContainer.Parent = DrawerContent
 
@@ -87,6 +92,7 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, 0, 0, 22)
         btn.BackgroundColor3 = themeManager.Get("Surface")
+        btn.BackgroundTransparency = 0.25
         btn.BorderSizePixel = 0
         btn.Font = Enum.Font.Code
         btn.Text = label
@@ -94,9 +100,14 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
         btn.TextSize = 10
         btn.Parent = DrawerActionContainer
 
+        local c = Instance.new("UICorner")
+        c.CornerRadius = UDim.new(0, 3)
+        c.Parent = btn
+
         local s = Instance.new("UIStroke")
         s.Thickness = 1
         s.Color = themeManager.Get("Border")
+        s.Transparency = 0.4
         s.Parent = btn
 
         windowBase.AttachMicroInteractions(btn)
@@ -151,7 +162,7 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
         end)
     end
 
-    -- Domino Ingestion Animation
+    -- Domino Rows
     local PlayerRows = {}
     local function RefreshList()
         local all = Players:GetPlayers()
@@ -168,15 +179,21 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
             row.Size = UDim2.new(1, 0, 0, 26)
             row.Position = UDim2.new(1.3, 0, 0, 0)
             row.BackgroundColor3 = themeManager.Get("Surface")
+            row.BackgroundTransparency = 0.3
             row.BorderSizePixel = 0
             row.AutoButtonColor = false
             row.Text = ""
             row.Parent = PlayerScroll
             PlayerRows[plr] = row
 
+            local rCorner = Instance.new("UICorner")
+            rCorner.CornerRadius = UDim.new(0, 3)
+            rCorner.Parent = row
+
             local rowStroke = Instance.new("UIStroke")
             rowStroke.Thickness = 1
             rowStroke.Color = themeManager.Get("Border")
+            rowStroke.Transparency = 0.4
             rowStroke.Parent = row
 
             local userIcon = Instance.new("TextLabel")

@@ -1,5 +1,5 @@
 -- Interface/CustomChat.lua
--- CoreGui Chat Subsystem Replacement with Waveform Monitor and Quick Macros
+-- Translucent Draggable Chat Subsystem with Waveform Amplitude Visualizer
 
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
@@ -15,7 +15,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
 
     local ChatWindow = windowBase.new("Chat", UDim2.new(0, 320, 0, 240), UDim2.new(0, 20, 1, -260), Vector2.new(260, 180), screenHost, themeManager, signalMod)
 
-    -- TopBar Voice Chat Waveform Monitor
+    -- TopBar Voice Amplitude Visualizer
     local ChatTopControls = Instance.new("Frame")
     ChatTopControls.Size = UDim2.new(0, 70, 1, 0)
     ChatTopControls.Position = UDim2.new(0, 50, 0, 0)
@@ -23,15 +23,21 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     ChatTopControls.Parent = ChatWindow.TopBar
 
     local WaveformBar = Instance.new("Frame")
-    WaveformBar.Size = UDim2.new(0, 24, 0, 10)
+    WaveformBar.Size = UDim2.new(0, 26, 0, 10)
     WaveformBar.Position = UDim2.new(0, 0, 0.5, -5)
     WaveformBar.BackgroundColor3 = themeManager.Get("Surface")
+    WaveformBar.BackgroundTransparency = 0.3
     WaveformBar.BorderSizePixel = 0
     WaveformBar.Parent = ChatTopControls
+
+    local WaveCorner = Instance.new("UICorner")
+    WaveCorner.CornerRadius = UDim.new(0, 2)
+    WaveCorner.Parent = WaveformBar
 
     local WaveStroke = Instance.new("UIStroke")
     WaveStroke.Thickness = 1
     WaveStroke.Color = themeManager.Get("Border")
+    WaveStroke.Transparency = 0.4
     WaveStroke.Parent = WaveformBar
 
     local WaveFill = Instance.new("Frame")
@@ -44,16 +50,16 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     task.spawn(function()
         while true do
             task.wait(0.1)
-            local amp = math.clamp(math.noise(tick() * 3, 0, 0) * 1.5, 0.1, 1.0)
+            local amp = math.clamp(math.noise(tick() * 3, 0, 0) * 1.5, 0.15, 1.0)
             WaveFill.Size = UDim2.new(amp, 0, 1, 0)
         end
     end)
 
-    -- Message Scroll Viewport
+    -- Message Scroll Frame
     local MessageScroll = Instance.new("ScrollingFrame")
     MessageScroll.Name = "Messages"
-    MessageScroll.Size = UDim2.new(1, -8, 1, -34)
-    MessageScroll.Position = UDim2.new(0, 4, 0, 4)
+    MessageScroll.Size = UDim2.new(1, -12, 1, -38)
+    MessageScroll.Position = UDim2.new(0, 6, 0, 6)
     MessageScroll.BackgroundTransparency = 1
     MessageScroll.BorderSizePixel = 0
     MessageScroll.ScrollBarThickness = 3
@@ -77,7 +83,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
         lbl.RichText = true
         lbl.Text = string.format("[USER] <font color=\"#%s\"><b>%s</b></font>: %s", hex, sender, text)
         lbl.TextColor3 = themeManager.Get("TextPrimary")
-        lbl.TextSize = 12
+        lbl.TextSize = 11
         lbl.TextWrapped = true
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = MessageScroll
@@ -87,20 +93,27 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
 
     -- Bottom Chat Bar
     local ChatInputBar = Instance.new("Frame")
-    ChatInputBar.Size = UDim2.new(1, -8, 0, 24)
-    ChatInputBar.Position = UDim2.new(0, 4, 1, -26)
+    ChatInputBar.Size = UDim2.new(1, -12, 0, 24)
+    ChatInputBar.Position = UDim2.new(0, 6, 1, -28)
     ChatInputBar.BackgroundColor3 = themeManager.Get("Surface")
+    ChatInputBar.BackgroundTransparency = 0.3
     ChatInputBar.BorderSizePixel = 0
     ChatInputBar.Parent = ChatWindow.Content
+
+    local InputCorner = Instance.new("UICorner")
+    InputCorner.CornerRadius = UDim.new(0, 3)
+    InputCorner.Parent = ChatInputBar
 
     local ChatInputStroke = Instance.new("UIStroke")
     ChatInputStroke.Thickness = 1
     ChatInputStroke.Color = themeManager.Get("Border")
+    ChatInputStroke.Transparency = 0.4
     ChatInputStroke.Parent = ChatInputBar
 
     local QuickBtn = Instance.new("TextButton")
     QuickBtn.Size = UDim2.new(0, 46, 1, 0)
     QuickBtn.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
+    QuickBtn.BackgroundTransparency = 0.2
     QuickBtn.BorderSizePixel = 0
     QuickBtn.Font = Enum.Font.Code
     QuickBtn.Text = "Quick"
@@ -108,8 +121,12 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     QuickBtn.TextSize = 10
     QuickBtn.Parent = ChatInputBar
 
+    local QuickCorner = Instance.new("UICorner")
+    QuickCorner.CornerRadius = UDim.new(0, 3)
+    QuickCorner.Parent = QuickBtn
+
     local ChatBox = Instance.new("TextBox")
-    ChatBox.Size = UDim2.new(1, -94, 1, 0)
+    ChatBox.Size = UDim2.new(1, -96, 1, 0)
     ChatBox.Position = UDim2.new(0, 48, 0, 0)
     ChatBox.BackgroundTransparency = 1
     ChatBox.Font = Enum.Font.Code
@@ -133,6 +150,10 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     SendBtn.TextSize = 10
     SendBtn.Parent = ChatInputBar
     themeManager.RegisterBinding(SendBtn, "BackgroundColor3", "Accent")
+
+    local SendCorner = Instance.new("UICorner")
+    SendCorner.CornerRadius = UDim.new(0, 3)
+    SendCorner.Parent = SendBtn
 
     local function Transmit(msg: string)
         if string.len(msg) == 0 then return end
@@ -159,13 +180,18 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
 
     -- Quick Chat Macro Panel
     local MacroFrame = Instance.new("Frame")
-    MacroFrame.Size = UDim2.new(0, 120, 0, 90)
-    MacroFrame.Position = UDim2.new(0, 4, 1, -120)
+    MacroFrame.Size = UDim2.new(0, 120, 0, 95)
+    MacroFrame.Position = UDim2.new(0, 6, 1, -126)
     MacroFrame.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
+    MacroFrame.BackgroundTransparency = 0.15
     MacroFrame.BorderSizePixel = 0
     MacroFrame.Visible = false
-    MacroFrame.ZIndex = 8
+    MacroFrame.ZIndex = 30
     MacroFrame.Parent = ChatWindow.Content
+
+    local MacroCorner = Instance.new("UICorner")
+    MacroCorner.CornerRadius = UDim.new(0, 4)
+    MacroCorner.Parent = MacroFrame
 
     local MacroStroke = Instance.new("UIStroke")
     MacroStroke.Thickness = 1
@@ -180,14 +206,15 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     local QuickMacros = { "gg", "nice shot!", "hello everyone", "lagging rn" }
     for _, macro in ipairs(QuickMacros) do
         local mBtn = Instance.new("TextButton")
-        mBtn.Size = UDim2.new(1, 0, 0, 20)
+        mBtn.Size = UDim2.new(1, 0, 0, 21)
         mBtn.BackgroundColor3 = themeManager.Get("Surface")
+        mBtn.BackgroundTransparency = 0.2
         mBtn.BorderSizePixel = 0
         mBtn.Font = Enum.Font.Code
         mBtn.Text = macro
         mBtn.TextColor3 = themeManager.Get("TextPrimary")
         mBtn.TextSize = 10
-        mBtn.ZIndex = 9
+        mBtn.ZIndex = 31
         mBtn.Parent = MacroFrame
         mBtn.MouseButton1Click:Connect(function()
             Transmit(macro)

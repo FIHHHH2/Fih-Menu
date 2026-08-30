@@ -1,5 +1,5 @@
 -- Modules/MediaBridgeClient.lua
--- Localhost Media Daemon Poller & Synced LRC Parser
+-- Media Daemon Poller & Synced LRC Metadata Engine
 
 local HttpService = game:GetService("HttpService")
 
@@ -9,12 +9,11 @@ MediaBridgeClient.__index = MediaBridgeClient
 function MediaBridgeClient.new(signalMod: any)
     local self = setmetatable({}, MediaBridgeClient)
     self.OnTrackChange = signalMod.new()
-    self.OnLyricsUpdate = signalMod.new()
     self.CurrentTrack = {
-        Title = "Track 01",
-        Artist = "Universal Media",
+        Title = "Lo-Fi Beats (Local Mode)",
+        Artist = "Universal Audio",
         AlbumArt = "rbxassetid://10849911991",
-        DurationMs = 180000,
+        DurationMs = 214000,
         ProgressMs = 0,
         IsPlaying = true,
         Lyrics = {},

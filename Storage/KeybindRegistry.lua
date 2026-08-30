@@ -1,5 +1,5 @@
 -- Storage/KeybindRegistry.lua
--- Global Hotkey Dispatcher
+-- Global Hotkey Interceptor & Dispatcher
 
 local UserInputService = game:GetService("UserInputService")
 

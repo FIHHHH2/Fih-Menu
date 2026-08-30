@@ -26,6 +26,7 @@ Fih-Menu/
 │   ├── PlatformFloater.lua      -- Stepped platform descent
 │   ├── FlingController.lua      -- Rotational physics desync
 │   ├── CharacterMods.lua        -- Speed, jump, infinite jump & noclip loop
+│   ├── VisualsController.lua    -- ESP, tracers, fullbright & FOV
 │   └── MediaBridgeClient.lua    -- Localhost HTTP media synchronizer
 ├── Storage/
 │   ├── ConfigManager.lua        -- JSON configuration save/load

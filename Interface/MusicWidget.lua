@@ -1,5 +1,5 @@
 -- Interface/MusicWidget.lua
--- Media Visualizer & Synced Lyrics HUD
+-- Translucent Draggable Music HUD with Audio Spectrum Visualizer & Lyrics
 
 local TweenService = game:GetService("TweenService")
 
@@ -12,12 +12,17 @@ function MusicWidget.new(windowBase: any, screenHost: ScreenGui, themeManager: a
 
     local CoverArt = Instance.new("ImageLabel")
     CoverArt.Name = "SongCover"
-    CoverArt.Size = UDim2.new(0, 90, 0, 90)
+    CoverArt.Size = UDim2.new(0, 92, 0, 92)
     CoverArt.Position = UDim2.new(0, 8, 0, 8)
     CoverArt.BackgroundColor3 = themeManager.Get("Surface")
+    CoverArt.BackgroundTransparency = 0.3
     CoverArt.BorderSizePixel = 0
     CoverArt.Image = "rbxassetid://10849911991"
     CoverArt.Parent = MusicContent
+
+    local CoverCorner = Instance.new("UICorner")
+    CoverCorner.CornerRadius = UDim.new(0, 4)
+    CoverCorner.Parent = CoverArt
 
     local CoverStroke = Instance.new("UIStroke")
     CoverStroke.Thickness = 1
@@ -34,8 +39,8 @@ function MusicWidget.new(windowBase: any, screenHost: ScreenGui, themeManager: a
     CoverLabel.Parent = CoverArt
 
     local SongDetails = Instance.new("Frame")
-    SongDetails.Size = UDim2.new(1, -114, 1, -16)
-    SongDetails.Position = UDim2.new(0, 106, 0, 8)
+    SongDetails.Size = UDim2.new(1, -116, 1, -16)
+    SongDetails.Position = UDim2.new(0, 108, 0, 8)
     SongDetails.BackgroundTransparency = 1
     SongDetails.Parent = MusicContent
 
@@ -54,12 +59,18 @@ function MusicWidget.new(windowBase: any, screenHost: ScreenGui, themeManager: a
     LyricsBox.Size = UDim2.new(1, 0, 0, 40)
     LyricsBox.Position = UDim2.new(0, 0, 0, 22)
     LyricsBox.BackgroundColor3 = themeManager.Get("Surface")
+    LyricsBox.BackgroundTransparency = 0.3
     LyricsBox.BorderSizePixel = 0
     LyricsBox.Parent = SongDetails
+
+    local LyricsCorner = Instance.new("UICorner")
+    LyricsCorner.CornerRadius = UDim.new(0, 3)
+    LyricsCorner.Parent = LyricsBox
 
     local LyricsStroke = Instance.new("UIStroke")
     LyricsStroke.Thickness = 1
     LyricsStroke.Color = themeManager.Get("Border")
+    LyricsStroke.Transparency = 0.4
     LyricsStroke.Parent = LyricsBox
 
     local LyricsLabel = Instance.new("TextLabel")
@@ -78,12 +89,18 @@ function MusicWidget.new(windowBase: any, screenHost: ScreenGui, themeManager: a
     VisualizerFrame.Size = UDim2.new(1, 0, 0, 36)
     VisualizerFrame.Position = UDim2.new(0, 0, 0, 68)
     VisualizerFrame.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
+    VisualizerFrame.BackgroundTransparency = 0.3
     VisualizerFrame.BorderSizePixel = 0
     VisualizerFrame.Parent = SongDetails
+
+    local VisCorner = Instance.new("UICorner")
+    VisCorner.CornerRadius = UDim.new(0, 3)
+    VisCorner.Parent = VisualizerFrame
 
     local VisStroke = Instance.new("UIStroke")
     VisStroke.Thickness = 1
     VisStroke.Color = themeManager.Get("Border")
+    VisStroke.Transparency = 0.4
     VisStroke.Parent = VisualizerFrame
 
     local VisLayout = Instance.new("UIListLayout")
@@ -101,6 +118,11 @@ function MusicWidget.new(windowBase: any, screenHost: ScreenGui, themeManager: a
         bar.BackgroundColor3 = themeManager.Get("Accent")
         bar.BorderSizePixel = 0
         bar.Parent = VisualizerFrame
+
+        local bCorner = Instance.new("UICorner")
+        bCorner.CornerRadius = UDim.new(0, 1)
+        bCorner.Parent = bar
+
         themeManager.RegisterBinding(bar, "BackgroundColor3", "Accent")
         table.insert(VisualizerBars, bar)
     end

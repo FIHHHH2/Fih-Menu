@@ -61,6 +61,7 @@ local FlightController = RequireModule("Modules/FlightController")
 local PlatformFloater = RequireModule("Modules/PlatformFloater")
 local FlingController = RequireModule("Modules/FlingController")
 local CharacterMods = RequireModule("Modules/CharacterMods")
+local VisualsController = RequireModule("Modules/VisualsController")
 local MediaBridgeClient = RequireModule("Modules/MediaBridgeClient")
 
 -- 3. Storage
@@ -89,6 +90,7 @@ local MainHub = MainMenu.new(
     PlatformFloater,
     FlingController,
     CharacterMods,
+    VisualsController,
     {
         Chat = ChatWindow,
         PlayerList = PlayerListWindow,

@@ -1,5 +1,5 @@
 -- Modules/PlatformFloater.lua
--- Timed Stepped Descent Platform Floater
+-- Stepped Timed Descent Platform Floater
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -12,6 +12,7 @@ local PlatformFloater = {
     PlatformPart = nil :: BasePart?,
     HeartbeatConn = nil :: RBXScriptConnection?,
     PlatformY = 0,
+    StepHeight = 0.45,
 }
 
 local function GetRoot(): BasePart?
@@ -37,7 +38,7 @@ function PlatformFloater.Enable(accentColor: Color3?)
     part.Size = Vector3.new(6, 1, 6)
     part.Anchored = true
     part.CanCollide = true
-    part.Transparency = 0.4
+    part.Transparency = 0.35
     part.Material = Enum.Material.Neon
     part.Color = accentColor or Color3.fromRGB(85, 170, 255)
     part.CFrame = CFrame.new(root.Position.X, PlatformFloater.PlatformY, root.Position.Z)
@@ -52,7 +53,7 @@ function PlatformFloater.Enable(accentColor: Color3?)
         stepTimer += dt
         if stepTimer >= 0.25 then
             stepTimer = 0
-            PlatformFloater.PlatformY -= 0.45
+            PlatformFloater.PlatformY -= PlatformFloater.StepHeight
         end
 
         local hum = GetHumanoid()
