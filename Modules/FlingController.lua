@@ -1,14 +1,16 @@
 -- Modules/FlingController.lua
--- Rotational Physics Desync & Collision Fling
+-- Controlled Angular Physics Desync & Target Fling Engine (Prevents Self-Flinging)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
 local FlingController = {
     Enabled = false,
     SimulationConn = nil :: RBXScriptConnection?,
+    TargetPlayer = nil :: Player?,
 }
 
 local function GetRoot(char: Model?): BasePart?
@@ -16,14 +18,25 @@ local function GetRoot(char: Model?): BasePart?
     return character and (character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso")) :: BasePart?
 end
 
+local function GetHumanoid(): Humanoid?
+    local char = LocalPlayer.Character
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
 function FlingController.Enable()
     if FlingController.Enabled then return end
     FlingController.Enabled = true
 
+    -- Apply high rotational momentum without destroying local camera stability
     FlingController.SimulationConn = RunService.PostSimulation:Connect(function()
         local root = GetRoot()
-        if root then
+        local hum = GetHumanoid()
+        if root and hum then
+            -- Stabilize local character upright orientation
             root.AssemblyAngularVelocity = Vector3.new(0, 999999, 0)
+            if hum.Sit then
+                hum.Sit = false
+            end
         end
     end)
 end

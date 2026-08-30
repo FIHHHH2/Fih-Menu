@@ -57,13 +57,14 @@ local Signal = RequireModule("Core/Signal")
 local ThemeManager = RequireModule("Core/ThemeManager")
 local WindowBase = RequireModule("Core/WindowBase")
 
--- 2. Advantage / Backend Feature Modules
+-- 2. Backend & Advantage Modules
 local FlightController = RequireModule("Modules/FlightController")
 local PlatformFloater = RequireModule("Modules/PlatformFloater")
 local FlingController = RequireModule("Modules/FlingController")
 local CharacterMods = RequireModule("Modules/CharacterMods")
 local VisualsController = RequireModule("Modules/VisualsController")
 local MediaBridgeClient = RequireModule("Modules/MediaBridgeClient")
+local MusicEngine = RequireModule("Modules/MusicEngine")
 
 -- 3. Storage
 local ConfigManager = RequireModule("Storage/ConfigManager")
@@ -92,6 +93,7 @@ local MainHub = MainMenu.new(
     FlingController,
     CharacterMods,
     VisualsController,
+    MusicEngine,
     {
         Chat = ChatWindow,
         PlayerList = PlayerListWindow,

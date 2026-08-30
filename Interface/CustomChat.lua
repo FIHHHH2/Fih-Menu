@@ -1,5 +1,5 @@
 -- Interface/CustomChat.lua
--- Translucent Draggable Chat Subsystem with Waveform Amplitude Visualizer
+-- Top-Left CoreGui Chat Replacement with Live Two-Way Ingestion & Voice Waveform
 
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
@@ -13,26 +13,65 @@ local CustomChat = {}
 function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: any, signalMod: any)
     pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false) end)
 
-    local ChatWindow = windowBase.new("Chat", UDim2.new(0, 320, 0, 240), UDim2.new(0, 20, 1, -260), Vector2.new(260, 180), screenHost, themeManager, signalMod)
+    -- Fixed at Top-Left Screen Position
+    local ChatWindow = windowBase.new("Chat", UDim2.new(0, 340, 0, 250), UDim2.new(0, 20, 0, 20), Vector2.new(280, 190), screenHost, themeManager, signalMod)
 
-    -- TopBar Voice Amplitude Visualizer
+    -- TopBar Controls: Settings, Hamburger (≡), Voice Visualizer
     local ChatTopControls = Instance.new("Frame")
-    ChatTopControls.Size = UDim2.new(0, 70, 1, 0)
-    ChatTopControls.Position = UDim2.new(0, 50, 0, 0)
+    ChatTopControls.Size = UDim2.new(0, 110, 1, 0)
+    ChatTopControls.Position = UDim2.new(0, 48, 0, 0)
     ChatTopControls.BackgroundTransparency = 1
     ChatTopControls.Parent = ChatWindow.TopBar
 
+    local TopControlsLayout = Instance.new("UIListLayout")
+    TopControlsLayout.FillDirection = Enum.FillDirection.Horizontal
+    TopControlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    TopControlsLayout.Padding = UDim.new(0, 4)
+    TopControlsLayout.Parent = ChatTopControls
+
+    -- Settings Icon Button
+    local SettingBtn = Instance.new("TextButton")
+    SettingBtn.Size = UDim2.new(0, 20, 0, 18)
+    SettingBtn.BackgroundColor3 = themeManager.Get("Surface")
+    SettingBtn.BackgroundTransparency = 0.3
+    SettingBtn.BorderSizePixel = 0
+    SettingBtn.Font = Enum.Font.Code
+    SettingBtn.Text = "⚙"
+    SettingBtn.TextColor3 = themeManager.Get("TextPrimary")
+    SettingBtn.TextSize = 10
+    SettingBtn.Parent = ChatTopControls
+
+    local SettingStroke = Instance.new("UIStroke")
+    SettingStroke.Thickness = 1
+    SettingStroke.Color = themeManager.Get("Border")
+    SettingStroke.Transparency = 0.4
+    SettingStroke.Parent = SettingBtn
+
+    -- Hamburger Menu Button
+    local MenuBtn = Instance.new("TextButton")
+    MenuBtn.Size = UDim2.new(0, 20, 0, 18)
+    MenuBtn.BackgroundColor3 = themeManager.Get("Surface")
+    MenuBtn.BackgroundTransparency = 0.3
+    MenuBtn.BorderSizePixel = 0
+    MenuBtn.Font = Enum.Font.Code
+    MenuBtn.Text = "≡"
+    MenuBtn.TextColor3 = themeManager.Get("TextPrimary")
+    MenuBtn.TextSize = 11
+    MenuBtn.Parent = ChatTopControls
+
+    local MenuStroke = Instance.new("UIStroke")
+    MenuStroke.Thickness = 1
+    MenuStroke.Color = themeManager.Get("Border")
+    MenuStroke.Transparency = 0.4
+    MenuStroke.Parent = MenuBtn
+
+    -- Voice Chat Waveform Visualizer
     local WaveformBar = Instance.new("Frame")
-    WaveformBar.Size = UDim2.new(0, 26, 0, 10)
-    WaveformBar.Position = UDim2.new(0, 0, 0.5, -5)
+    WaveformBar.Size = UDim2.new(0, 36, 0, 12)
     WaveformBar.BackgroundColor3 = themeManager.Get("Surface")
     WaveformBar.BackgroundTransparency = 0.3
     WaveformBar.BorderSizePixel = 0
     WaveformBar.Parent = ChatTopControls
-
-    local WaveCorner = Instance.new("UICorner")
-    WaveCorner.CornerRadius = UDim.new(0, 2)
-    WaveCorner.Parent = WaveformBar
 
     local WaveStroke = Instance.new("UIStroke")
     WaveStroke.Thickness = 1
@@ -55,7 +94,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
         end
     end)
 
-    -- Message Scroll Frame
+    -- Message Scroll Frame (Strictly Squared)
     local MessageScroll = Instance.new("ScrollingFrame")
     MessageScroll.Name = "Messages"
     MessageScroll.Size = UDim2.new(1, -12, 1, -38)
@@ -91,6 +130,28 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
         MessageScroll.CanvasPosition = Vector2.new(0, MessageScroll.AbsoluteCanvasSize.Y)
     end
 
+    -- Universal Live Chat Ingestion (Modern TextChatService + Legacy Events)
+    pcall(function()
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            TextChatService.MessageReceived:Connect(function(textChatMessage)
+                if textChatMessage.TextSource then
+                    local senderPlr = Players:GetPlayerByUserId(textChatMessage.TextSource.UserId)
+                    local name = senderPlr and senderPlr.DisplayName or textChatMessage.TextSource.Name
+                    AddChatMessage(name, textChatMessage.Text, "55AAFF")
+                end
+            end)
+        else
+            local sayEvent = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 3)
+            if sayEvent and sayEvent:FindFirstChild("OnMessageDoneFiltering") then
+                (sayEvent.OnMessageDoneFiltering :: any).OnClientEvent:Connect(function(data)
+                    if data and data.FromSpeaker and data.Message then
+                        AddChatMessage(tostring(data.FromSpeaker), tostring(data.Message), "55AAFF")
+                    end
+                end)
+            end
+        end
+    end)
+
     -- Bottom Chat Bar
     local ChatInputBar = Instance.new("Frame")
     ChatInputBar.Size = UDim2.new(1, -12, 0, 24)
@@ -99,10 +160,6 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     ChatInputBar.BackgroundTransparency = 0.3
     ChatInputBar.BorderSizePixel = 0
     ChatInputBar.Parent = ChatWindow.Content
-
-    local InputCorner = Instance.new("UICorner")
-    InputCorner.CornerRadius = UDim.new(0, 3)
-    InputCorner.Parent = ChatInputBar
 
     local ChatInputStroke = Instance.new("UIStroke")
     ChatInputStroke.Thickness = 1
@@ -120,10 +177,6 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     QuickBtn.TextColor3 = themeManager.Get("TextSecondary")
     QuickBtn.TextSize = 10
     QuickBtn.Parent = ChatInputBar
-
-    local QuickCorner = Instance.new("UICorner")
-    QuickCorner.CornerRadius = UDim.new(0, 3)
-    QuickCorner.Parent = QuickBtn
 
     local ChatBox = Instance.new("TextBox")
     ChatBox.Size = UDim2.new(1, -96, 1, 0)
@@ -151,13 +204,8 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     SendBtn.Parent = ChatInputBar
     themeManager.RegisterBinding(SendBtn, "BackgroundColor3", "Accent")
 
-    local SendCorner = Instance.new("UICorner")
-    SendCorner.CornerRadius = UDim.new(0, 3)
-    SendCorner.Parent = SendBtn
-
     local function Transmit(msg: string)
         if string.len(msg) == 0 then return end
-        AddChatMessage(LocalPlayer.DisplayName, msg, "55AAFF")
         ChatBox.Text = ""
 
         task.spawn(function()
@@ -178,7 +226,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     SendBtn.MouseButton1Click:Connect(function() Transmit(ChatBox.Text) end)
     ChatBox.FocusLost:Connect(function(enter) if enter then Transmit(ChatBox.Text) end end)
 
-    -- Quick Chat Macro Panel
+    -- Quick Chat Macro Panel (Strictly Squared)
     local MacroFrame = Instance.new("Frame")
     MacroFrame.Size = UDim2.new(0, 120, 0, 95)
     MacroFrame.Position = UDim2.new(0, 6, 1, -126)
@@ -186,12 +234,8 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     MacroFrame.BackgroundTransparency = 0.15
     MacroFrame.BorderSizePixel = 0
     MacroFrame.Visible = false
-    MacroFrame.ZIndex = 30
+    MacroFrame.ZIndex = 45
     MacroFrame.Parent = ChatWindow.Content
-
-    local MacroCorner = Instance.new("UICorner")
-    MacroCorner.CornerRadius = UDim.new(0, 4)
-    MacroCorner.Parent = MacroFrame
 
     local MacroStroke = Instance.new("UIStroke")
     MacroStroke.Thickness = 1
@@ -214,7 +258,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
         mBtn.Text = macro
         mBtn.TextColor3 = themeManager.Get("TextPrimary")
         mBtn.TextSize = 10
-        mBtn.ZIndex = 31
+        mBtn.ZIndex = 46
         mBtn.Parent = MacroFrame
         mBtn.MouseButton1Click:Connect(function()
             Transmit(macro)

@@ -1,5 +1,5 @@
 -- Core/WindowBase.lua
--- Robust Draggable & Resizable Translucent Base Window Architecture
+-- Strictly Squared, Translucent, Draggable & Resizable Base Window Architecture
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -18,16 +18,16 @@ function WindowBase.AttachMicroInteractions(button: GuiButton)
     end
 
     button.MouseEnter:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.03 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.03 }):Play()
     end)
     button.MouseLeave:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.0 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.0 }):Play()
     end)
     button.MouseButton1Down:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.96 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.96 }):Play()
     end)
     button.MouseButton1Up:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.03 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.03 }):Play()
     end)
 end
 
@@ -44,7 +44,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
     local initX = initialPos.X.Scale * vp.X + initialPos.X.Offset
     local initY = initialPos.Y.Scale * vp.Y + initialPos.Y.Offset
 
-    -- Root Translucent Window Frame
+    -- Root Translucent Window Frame (Strictly Squared, NO UICorner)
     local Frame = Instance.new("Frame")
     Frame.Name = titleText .. "_Window"
     Frame.Size = defaultSize
@@ -58,9 +58,14 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
     Frame.Parent = screenHost
     self.Frame = Frame
 
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 4)
-    Corner.Parent = Frame
+    -- Dark Linear Gradient Fill
+    local Grad = Instance.new("UIGradient")
+    Grad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 42)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 18)),
+    })
+    Grad.Rotation = 90
+    Grad.Parent = Frame
 
     local Stroke = Instance.new("UIStroke")
     Stroke.Thickness = 1
@@ -70,10 +75,10 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
     Stroke.Parent = Frame
     self.Stroke = Stroke
 
-    -- Top Bar (Drag Handle)
+    -- Top Bar (Drag Handle - Strictly Squared)
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
-    TopBar.Size = UDim2.new(1, 0, 0, 28)
+    TopBar.Size = UDim2.new(1, 0, 0, 26)
     TopBar.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
     TopBar.BackgroundTransparency = themeManager.GetTransparency("BackgroundSecondary")
     TopBar.BorderSizePixel = 0
@@ -81,23 +86,19 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
     TopBar.Parent = Frame
     self.TopBar = TopBar
 
-    local TopCorner = Instance.new("UICorner")
-    TopCorner.CornerRadius = UDim.new(0, 4)
-    TopCorner.Parent = TopBar
-
     local TopBarBottomLine = Instance.new("Frame")
     TopBarBottomLine.Size = UDim2.new(1, 0, 0, 1)
     TopBarBottomLine.Position = UDim2.new(0, 0, 1, -1)
     TopBarBottomLine.BackgroundColor3 = themeManager.Get("Border")
-    TopBarBottomLine.BackgroundTransparency = 0.5
+    TopBarBottomLine.BackgroundTransparency = 0.4
     TopBarBottomLine.BorderSizePixel = 0
     TopBarBottomLine.Parent = TopBar
     themeManager.RegisterBinding(TopBarBottomLine, "BackgroundColor3", "Border")
 
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "Title"
-    TitleLabel.Size = UDim2.new(1, -120, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    TitleLabel.Size = UDim2.new(1, -110, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 8, 0, 0)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.Code
     TitleLabel.Text = string.upper(titleText)
@@ -107,13 +108,13 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
     TitleLabel.Parent = TopBar
     self.TitleLabel = TitleLabel
 
-    -- Controls (Min & Close)
+    -- Controls (Min & Close - High Visibility, Squared)
     local Controls = Instance.new("Frame")
     Controls.Name = "Controls"
-    Controls.Size = UDim2.new(0, 58, 1, 0)
-    Controls.Position = UDim2.new(1, -62, 0, 0)
+    Controls.Size = UDim2.new(0, 56, 1, 0)
+    Controls.Position = UDim2.new(1, -58, 0, 0)
     Controls.BackgroundTransparency = 1
-    Controls.ZIndex = 15
+    Controls.ZIndex = 40
     Controls.Parent = TopBar
 
     local Layout = Instance.new("UIListLayout")
@@ -121,79 +122,71 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
     Layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     Layout.VerticalAlignment = Enum.VerticalAlignment.Center
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
-    Layout.Padding = UDim.new(0, 3)
+    Layout.Padding = UDim.new(0, 2)
     Layout.Parent = Controls
 
     local MinBtn = Instance.new("TextButton")
     MinBtn.Name = "MinBtn"
     MinBtn.Size = UDim2.new(0, 22, 0, 20)
     MinBtn.BackgroundColor3 = themeManager.Get("Surface")
-    MinBtn.BackgroundTransparency = 0.3
+    MinBtn.BackgroundTransparency = 0.2
     MinBtn.BorderSizePixel = 0
     MinBtn.Font = Enum.Font.Code
     MinBtn.Text = "—"
-    MinBtn.TextColor3 = themeManager.Get("TextSecondary")
+    MinBtn.TextColor3 = themeManager.Get("TextPrimary")
     MinBtn.TextSize = 11
     MinBtn.AutoButtonColor = false
-    MinBtn.ZIndex = 16
+    MinBtn.ZIndex = 41
     MinBtn.Parent = Controls
-
-    local MinCorner = Instance.new("UICorner")
-    MinCorner.CornerRadius = UDim.new(0, 3)
-    MinCorner.Parent = MinBtn
 
     local MinStroke = Instance.new("UIStroke")
     MinStroke.Thickness = 1
     MinStroke.Color = themeManager.Get("Border")
-    MinStroke.Transparency = 0.4
+    MinStroke.Transparency = 0.3
     MinStroke.Parent = MinBtn
 
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Name = "CloseBtn"
     CloseBtn.Size = UDim2.new(0, 22, 0, 20)
     CloseBtn.BackgroundColor3 = themeManager.Get("Surface")
-    CloseBtn.BackgroundTransparency = 0.3
+    CloseBtn.BackgroundTransparency = 0.2
     CloseBtn.BorderSizePixel = 0
     CloseBtn.Font = Enum.Font.Code
     CloseBtn.Text = "✕"
-    CloseBtn.TextColor3 = themeManager.Get("TextSecondary")
+    CloseBtn.TextColor3 = themeManager.Get("TextPrimary")
     CloseBtn.TextSize = 11
     CloseBtn.AutoButtonColor = false
-    CloseBtn.ZIndex = 16
+    CloseBtn.ZIndex = 41
     CloseBtn.Parent = Controls
-
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 3)
-    CloseCorner.Parent = CloseBtn
 
     local CloseStroke = Instance.new("UIStroke")
     CloseStroke.Thickness = 1
     CloseStroke.Color = themeManager.Get("Border")
-    CloseStroke.Transparency = 0.4
+    CloseStroke.Transparency = 0.3
     CloseStroke.Parent = CloseBtn
 
     -- Content Viewport
     local Content = Instance.new("Frame")
     Content.Name = "Content"
-    Content.Size = UDim2.new(1, 0, 1, -28)
-    Content.Position = UDim2.new(0, 0, 0, 28)
+    Content.Size = UDim2.new(1, 0, 1, -26)
+    Content.Position = UDim2.new(0, 0, 0, 26)
     Content.BackgroundTransparency = 1
     Content.ClipsDescendants = true
     Content.Parent = Frame
     self.Content = Content
 
-    -- Corner Resize Grip
+    -- Corner Resize Grip (Squared triangle)
     local Grip = Instance.new("TextButton")
     Grip.Name = "ResizeGrip"
     Grip.Size = UDim2.new(0, 16, 0, 16)
     Grip.AnchorPoint = Vector2.new(1, 1)
-    Grip.Position = UDim2.new(1, -2, 1, -2)
+    Grip.Position = UDim2.new(1, 0, 1, 0)
     Grip.BackgroundTransparency = 1
     Grip.Text = "◢"
     Grip.Font = Enum.Font.Code
     Grip.TextColor3 = themeManager.Get("TextSecondary")
     Grip.TextSize = 13
-    Grip.ZIndex = 20
+    Grip.ZIndex = 35
     Grip.Parent = Frame
     self.Grip = Grip
 
@@ -245,7 +238,6 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
         end
     end)
 
-    -- Global Input Changed
     UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             local currentVp = Workspace.CurrentCamera and Workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
@@ -256,11 +248,11 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
                 local targetX = DragStartPos.X + delta.X
                 local targetY = DragStartPos.Y + delta.Y
 
-                -- Clamp within Viewport
+                -- Clamp strictly inside Viewport
                 targetX = math.clamp(targetX, 0, currentVp.X - Frame.AbsoluteSize.X)
                 targetY = math.clamp(targetY, 0, currentVp.Y - Frame.AbsoluteSize.Y)
 
-                -- Viewport Edge Snapping (< 14px)
+                -- Snap to true screen borders (< 14px)
                 if targetX < 14 then targetX = 0 end
                 if targetY < 14 then targetY = 0 end
                 if math.abs((targetX + Frame.AbsoluteSize.X) - currentVp.X) < 14 then
@@ -282,7 +274,6 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
         end
     end)
 
-    -- Global Input Ended (Never Drops Drag/Resize)
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             Dragging = false
@@ -290,14 +281,13 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
         end
     end)
 
-    -- Minimize Action
     MinBtn.MouseButton1Click:Connect(function()
         self.IsMinimized = not self.IsMinimized
         if self.IsMinimized then
             self.StoredSize = Frame.Size
             Content.Visible = false
             Grip.Visible = false
-            Frame.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, 28)
+            Frame.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, 26)
             MinBtn.Text = "□"
         else
             Frame.Size = self.StoredSize
@@ -307,7 +297,6 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
         end
     end)
 
-    -- Close Action
     CloseBtn.MouseButton1Click:Connect(function()
         self.OnClose:Fire()
         Frame.Visible = false
@@ -315,12 +304,12 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2
 
     for _, btn in ipairs({ MinBtn, CloseBtn }) do
         btn.MouseEnter:Connect(function()
-            btn.BackgroundColor3 = themeManager.Get("Border")
-            btn.TextColor3 = themeManager.Get("TextPrimary")
+            btn.BackgroundColor3 = themeManager.Get("BorderActive")
+            btn.TextColor3 = Color3.new(1, 1, 1)
         end)
         btn.MouseLeave:Connect(function()
             btn.BackgroundColor3 = themeManager.Get("Surface")
-            btn.TextColor3 = themeManager.Get("TextSecondary")
+            btn.TextColor3 = themeManager.Get("TextPrimary")
         end)
     end
 

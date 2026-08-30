@@ -1,5 +1,5 @@
 -- Core/ThemeManager.lua
--- Translucent Glassmorphic Theme Engine with Adaptive Accent Interpolation
+-- Translucent Glassmorphic Theme Engine with Adaptive Multi-Token Reactive Interpolation
 
 local TweenService = game:GetService("TweenService")
 
@@ -7,25 +7,25 @@ local ThemeManager = {}
 ThemeManager.__index = ThemeManager
 
 local Tokens = {
-    BackgroundPrimary   = Color3.fromRGB(15, 15, 22),
-    BackgroundSecondary = Color3.fromRGB(22, 22, 30),
-    Surface             = Color3.fromRGB(28, 28, 38),
-    SurfaceHover        = Color3.fromRGB(40, 40, 54),
-    Border              = Color3.fromRGB(60, 60, 80),
+    BackgroundPrimary   = Color3.fromRGB(14, 14, 20),
+    BackgroundSecondary = Color3.fromRGB(20, 20, 28),
+    Surface             = Color3.fromRGB(26, 26, 36),
+    SurfaceHover        = Color3.fromRGB(38, 38, 52),
+    Border              = Color3.fromRGB(55, 55, 75),
     BorderActive        = Color3.fromRGB(85, 170, 255),
     TextPrimary         = Color3.fromRGB(245, 245, 250),
-    TextSecondary       = Color3.fromRGB(155, 155, 175),
+    TextSecondary       = Color3.fromRGB(150, 150, 170),
     Accent              = Color3.fromRGB(85, 170, 255),
     AccentGlow          = Color3.fromRGB(120, 190, 255),
-    Success             = Color3.fromRGB(80, 220, 140),
-    Danger              = Color3.fromRGB(245, 75, 75),
+    Success             = Color3.fromRGB(75, 215, 135),
+    Danger              = Color3.fromRGB(245, 70, 70),
 }
 
 local Transparencies = {
     BackgroundPrimary   = 0.12,
     BackgroundSecondary = 0.18,
-    Surface             = 0.30,
-    SurfaceHover        = 0.20,
+    Surface             = 0.28,
+    SurfaceHover        = 0.18,
     Border              = 0.35,
     BorderActive        = 0.00,
 }

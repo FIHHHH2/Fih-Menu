@@ -1,5 +1,5 @@
 -- Interface/CustomPlayerList.lua
--- Translucent Domino-Animated Leaderboard & Player Context Drawer
+-- Translucent Squared Leaderboard with Headshot Mugshots & Dynamic Y-Scaling
 
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
@@ -14,7 +14,7 @@ local CustomPlayerList = {}
 function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManager: any, signalMod: any, flingMod: any)
     pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end)
 
-    local PlrWindow = windowBase.new("Players : 0 online", UDim2.new(0, 230, 0, 280), UDim2.new(1, -250, 0, 30), Vector2.new(200, 180), screenHost, themeManager, signalMod)
+    local PlrWindow = windowBase.new("PLAYERS : 0 ONLINE", UDim2.new(0, 240, 0, 180), UDim2.new(1, -260, 0, 30), Vector2.new(210, 120), screenHost, themeManager, signalMod)
 
     local PlayerScroll = Instance.new("ScrollingFrame")
     PlayerScroll.Size = UDim2.new(1, -12, 1, -12)
@@ -31,8 +31,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     PlrLayout.Padding = UDim.new(0, 4)
     PlrLayout.Parent = PlayerScroll
 
-    -- Context Drawer Window (Translucent & Movable)
-    local DrawerWindow = windowBase.new("Select Plr", UDim2.new(0, 180, 0, 230), UDim2.new(1, -440, 0, 30), Vector2.new(160, 180), screenHost, themeManager, signalMod)
+    -- Context Drawer Window (Strictly Squared)
+    local DrawerWindow = windowBase.new("Select Plr", UDim2.new(0, 190, 0, 230), UDim2.new(1, -460, 0, 30), Vector2.new(170, 190), screenHost, themeManager, signalMod)
     DrawerWindow.Frame.Visible = false
 
     local DrawerContent = DrawerWindow.Content
@@ -43,10 +43,6 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     AvatarImg.BackgroundTransparency = 0.3
     AvatarImg.BorderSizePixel = 0
     AvatarImg.Parent = DrawerContent
-
-    local AvatarCorner = Instance.new("UICorner")
-    AvatarCorner.CornerRadius = UDim.new(0, 4)
-    AvatarCorner.Parent = AvatarImg
 
     local AvatarStroke = Instance.new("UIStroke")
     AvatarStroke.Thickness = 1
@@ -99,10 +95,6 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
         btn.TextColor3 = themeManager.Get("TextPrimary")
         btn.TextSize = 10
         btn.Parent = DrawerActionContainer
-
-        local c = Instance.new("UICorner")
-        c.CornerRadius = UDim.new(0, 3)
-        c.Parent = btn
 
         local s = Instance.new("UIStroke")
         s.Thickness = 1
@@ -162,11 +154,17 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
         end)
     end
 
-    -- Domino Rows
+    -- Domino Rows with Profile Mugshots
     local PlayerRows = {}
     local function RefreshList()
         local all = Players:GetPlayers()
         PlrWindow.TitleLabel.Text = string.format("PLAYERS : %d ONLINE", #all)
+
+        -- Dynamic Y-Axis Scaling
+        local targetHeight = math.clamp(32 + (#all * 32), 110, 480)
+        TweenService:Create(PlrWindow.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, PlrWindow.Frame.AbsoluteSize.X, 0, targetHeight)
+        }):Play()
 
         for _, row in pairs(PlayerRows) do
             row:Destroy()
@@ -176,7 +174,7 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
         for i, plr in ipairs(all) do
             local row = Instance.new("TextButton")
             row.Name = "Row_" .. plr.Name
-            row.Size = UDim2.new(1, 0, 0, 26)
+            row.Size = UDim2.new(1, 0, 0, 28)
             row.Position = UDim2.new(1.3, 0, 0, 0)
             row.BackgroundColor3 = themeManager.Get("Surface")
             row.BackgroundTransparency = 0.3
@@ -186,46 +184,32 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
             row.Parent = PlayerScroll
             PlayerRows[plr] = row
 
-            local rCorner = Instance.new("UICorner")
-            rCorner.CornerRadius = UDim.new(0, 3)
-            rCorner.Parent = row
-
             local rowStroke = Instance.new("UIStroke")
             rowStroke.Thickness = 1
             rowStroke.Color = themeManager.Get("Border")
             rowStroke.Transparency = 0.4
             rowStroke.Parent = row
 
-            local userIcon = Instance.new("TextLabel")
-            userIcon.Size = UDim2.new(0, 20, 1, 0)
-            userIcon.Position = UDim2.new(0, 4, 0, 0)
-            userIcon.BackgroundTransparency = 1
-            userIcon.Font = Enum.Font.Code
-            userIcon.Text = "👤"
-            userIcon.TextColor3 = themeManager.Get("TextSecondary")
-            userIcon.TextSize = 11
-            userIcon.Parent = row
+            -- Player Profile Mugshot
+            local mugshot = Instance.new("ImageLabel")
+            mugshot.Size = UDim2.new(0, 22, 0, 22)
+            mugshot.Position = UDim2.new(0, 4, 0.5, -11)
+            mugshot.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
+            mugshot.BackgroundTransparency = 0.2
+            mugshot.BorderSizePixel = 0
+            mugshot.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(plr.UserId) .. "&w=100&h=100"
+            mugshot.Parent = row
 
             local nameLbl = Instance.new("TextLabel")
-            nameLbl.Size = UDim2.new(1, -50, 1, 0)
-            nameLbl.Position = UDim2.new(0, 26, 0, 0)
+            nameLbl.Size = UDim2.new(1, -34, 1, 0)
+            nameLbl.Position = UDim2.new(0, 32, 0, 0)
             nameLbl.BackgroundTransparency = 1
             nameLbl.Font = Enum.Font.Code
-            nameLbl.Text = plr.DisplayName
+            nameLbl.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
             nameLbl.TextColor3 = themeManager.Get("TextPrimary")
-            nameLbl.TextSize = 11
+            nameLbl.TextSize = 10
             nameLbl.TextXAlignment = Enum.TextXAlignment.Left
             nameLbl.Parent = row
-
-            local indexLbl = Instance.new("TextLabel")
-            indexLbl.Size = UDim2.new(0, 20, 1, 0)
-            indexLbl.Position = UDim2.new(1, -24, 0, 0)
-            indexLbl.BackgroundTransparency = 1
-            indexLbl.Font = Enum.Font.Code
-            indexLbl.Text = tostring(i)
-            indexLbl.TextColor3 = themeManager.Get("TextSecondary")
-            indexLbl.TextSize = 10
-            indexLbl.Parent = row
 
             row.MouseButton1Click:Connect(function()
                 OpenDrawer(plr)
@@ -246,14 +230,14 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     Players.PlayerRemoving:Connect(function(plr)
         if PlayerRows[plr] then
             local row = PlayerRows[plr]
-            local tw = TweenService:Create(row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            local tw = TweenService:Create(row, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Position = UDim2.new(1.3, 0, 0, 0)
             })
             tw:Play()
             tw.Completed:Connect(function()
                 row:Destroy()
                 PlayerRows[plr] = nil
-                PlrWindow.TitleLabel.Text = string.format("PLAYERS : %d ONLINE", #Players:GetPlayers())
+                RefreshList()
             end)
         end
     end)
