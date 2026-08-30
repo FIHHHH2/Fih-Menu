@@ -1,5 +1,5 @@
 -- Fih_Menu.lua
--- Complete, Fully-Functional Fih Menu Suite (Cyberpunk Neon Modular Architecture)
+-- Complete Fih Menu Suite (Unified Single Scrollbar, Hero on Main Only, Toggle Drawers)
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -17,7 +17,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local Camera = Workspace.CurrentCamera
 
--- Safe GUI container
+-- Safe GUI Container
 local TargetParent: Instance = CoreGui
 pcall(function()
     local test = Instance.new("Folder")
@@ -41,7 +41,7 @@ ScreenHost.DisplayOrder = 100
 ScreenHost.Parent = TargetParent
 
 --------------------------------------------------------------------------------
--- 1. THEME ENGINE & PALETTE
+-- 1. THEME ENGINE
 --------------------------------------------------------------------------------
 local Tokens = {
     BackgroundPrimary   = Color3.fromRGB(18, 12, 26),
@@ -100,7 +100,7 @@ local function SetAccent(col: Color3)
 end
 
 --------------------------------------------------------------------------------
--- 2. BACKEND CHEAT LOGIC & ENGINE SUBSYSTEMS
+-- 2. BACKEND CHEAT ENGINE
 --------------------------------------------------------------------------------
 local State = {
     InfiniteJump = false,
@@ -115,7 +115,6 @@ local State = {
     WalkFling = false,
     BoxESP = false,
     NameESP = false,
-    DistanceESP = false,
     Highlights = false,
     Fullbright = false,
     OriginalBrightness = Lighting.Brightness,
@@ -134,7 +133,7 @@ local function GetHumanoid(char: Model?): Humanoid?
     return character and character:FindFirstChildOfClass("Humanoid")
 end
 
--- 2.1 Infinite Jump
+-- Infinite Jump
 UserInputService.JumpRequest:Connect(function()
     if State.InfiniteJump then
         local hum = GetHumanoid()
@@ -142,7 +141,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- 2.2 Click TP (Ctrl + Click)
+-- Click TP (Ctrl + Click)
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if State.ClickTP and input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
@@ -154,7 +153,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- 2.3 Stepped Noclip Loop
+-- Stepped Noclip Loop
 RunService.Stepped:Connect(function()
     if State.Noclip and LocalPlayer.Character then
         for _, p in ipairs(LocalPlayer.Character:GetDescendants()) do
@@ -163,7 +162,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 2.4 Spinbot & Walk Fling Engine
+-- Spinbot & Walk Fling
 RunService.PostSimulation:Connect(function()
     local root = GetRoot()
     local hum = GetHumanoid()
@@ -178,7 +177,7 @@ RunService.PostSimulation:Connect(function()
     end
 end)
 
--- 2.5 Flight Engine (LinearVelocity)
+-- Flight Engine
 local FlightAtt: Attachment? = nil
 local FlightLV: LinearVelocity? = nil
 local FlightConn: RBXScriptConnection? = nil
@@ -218,7 +217,7 @@ local function ToggleFlight(enable: boolean)
     end
 end
 
--- 2.6 Stepped Floater
+-- Stepped Floater
 local FloaterPart: BasePart? = nil
 local FloaterConn: RBXScriptConnection? = nil
 
@@ -255,7 +254,7 @@ local function ToggleFloater(enable: boolean)
     end
 end
 
--- 2.7 Visuals & ESP Handlers
+-- ESP Handlers
 local function UpdateHighlights(enable: boolean)
     State.Highlights = enable
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -357,7 +356,7 @@ local function ToggleFullbright(enable: boolean)
     end
 end
 
--- 2.8 Audio Engine (SoundService Instance)
+-- Audio Engine
 local AudioStream = Instance.new("Sound")
 AudioStream.Name = "FihMenu_AudioStream"
 AudioStream.Looped = true
@@ -371,7 +370,7 @@ local AudioPresets = {
     { Name = "Cyber Arcade 4", Id = 1845499092 },
 }
 
-local function PlayTrack(id: number, title: string)
+local function PlayTrack(id: number)
     AudioStream.SoundId = "rbxassetid://" .. tostring(id)
     AudioStream:Play()
 end
@@ -780,7 +779,7 @@ local function RefreshPlayerList()
 
         row.MouseButton1Click:Connect(function()
             State.SelectedTarget = plr
-            print("[Fih Menu] Selected target player: " .. plr.DisplayName)
+            print("[Fih Menu] Target selected: " .. plr.DisplayName)
         end)
     end
 end
@@ -881,7 +880,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------------------------------------
--- 7. MAIN HUB WINDOW (Hero Banner ON MAIN ONLY, Fully Populated Tabs)
+-- 7. MAIN HUB WINDOW (Single Unified Scrollbar, Hero on Main Only, Toggle Drawers)
 --------------------------------------------------------------------------------
 local MainWin = CreateWindow("Fih Ui", UDim2.new(0, 580, 0, 360), UDim2.new(0.5, -290, 0.5, -180), Vector2.new(480, 280))
 
@@ -946,26 +945,14 @@ TabTagLabel.TextSize = 10
 RegisterBinding(TabTagLabel, "TextColor3", "Accent")
 
 local SubHeaderRight = Instance.new("Frame", SubHeader)
-SubHeaderRight.Size = UDim2.new(0, 140, 1, 0)
-SubHeaderRight.Position = UDim2.new(1, -140, 0, 0)
+SubHeaderRight.Size = UDim2.new(0, 150, 1, 0)
+SubHeaderRight.Position = UDim2.new(1, -150, 0, 0)
 SubHeaderRight.BackgroundTransparency = 1
 
 local SubLayout = Instance.new("UIListLayout", SubHeaderRight)
 SubLayout.FillDirection = Enum.FillDirection.Horizontal
 SubLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-SubLayout.Padding = UDim.new(0, 3)
-
-local function CreateSubBtn(txt: string, onClick: () -> ())
-    local b = Instance.new("TextButton", SubHeaderRight)
-    b.Size = UDim2.new(0, 65, 1, 0)
-    b.BackgroundColor3 = GetColor("Surface")
-    b.BorderSizePixel = 0
-    b.Font = Enum.Font.Code
-    b.Text = txt
-    b.TextColor3 = GetColor("TextPrimary")
-    b.TextSize = 9
-    b.MouseButton1Click:Connect(onClick)
-end
+SubLayout.Padding = UDim.new(0, 4)
 
 -- Tab Container
 local TabContainer = Instance.new("Frame", RightContent)
@@ -1029,7 +1016,23 @@ local DrawerLayout = Instance.new("UIListLayout", DrawerScroll)
 DrawerLayout.SortOrder = Enum.SortOrder.LayoutOrder
 DrawerLayout.Padding = UDim.new(0, 4)
 
-local function OpenDrawer(title: string, buildFn: (Instance) -> ())
+-- Toggle-To-Close Drawer Engine
+local CurrentOpenDrawer = ""
+
+local function CloseDrawer()
+    CurrentOpenDrawer = ""
+    local tw = TweenService:Create(DrawerOverlay, TweenInfo.new(0.20, Enum.EasingStyle.Quad), { Position = UDim2.new(0, 0, -1, 0) })
+    tw:Play()
+    tw.Completed:Connect(function() DrawerOverlay.Visible = false end)
+end
+
+local function OpenDrawer(mode: string, title: string, buildFn: (Instance) -> ())
+    if CurrentOpenDrawer == mode and DrawerOverlay.Visible then
+        CloseDrawer()
+        return
+    end
+
+    CurrentOpenDrawer = mode
     DrawerTitle.Text = string.upper(title)
     for _, ch in ipairs(DrawerScroll:GetChildren()) do
         if ch:IsA("GuiObject") then ch:Destroy() end
@@ -1041,19 +1044,28 @@ local function OpenDrawer(title: string, buildFn: (Instance) -> ())
     TweenService:Create(DrawerOverlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Position = UDim2.new(0, 0, 0, 0) }):Play()
 end
 
-DrawerClose.MouseButton1Click:Connect(function()
-    local tw = TweenService:Create(DrawerOverlay, TweenInfo.new(0.20, Enum.EasingStyle.Quad), { Position = UDim2.new(0, 0, -1, 0) })
-    tw:Play()
-    tw.Completed:Connect(function() DrawerOverlay.Visible = false end)
-end)
+DrawerClose.MouseButton1Click:Connect(CloseDrawer)
 
-CreateSubBtn("Adapt", function()
-    OpenDrawer("Adaptive Themes", function(p)
+local function CreateSubBtn(txt: string, onClick: () -> ())
+    local b = Instance.new("TextButton", SubHeaderRight)
+    b.Size = UDim2.new(0, 70, 1, 0)
+    b.BackgroundColor3 = GetColor("Surface")
+    b.BorderSizePixel = 0
+    b.Font = Enum.Font.Code
+    b.Text = txt
+    b.TextColor3 = GetColor("TextPrimary")
+    b.TextSize = 9
+    b.MouseButton1Click:Connect(onClick)
+end
+
+-- Top Buttons: [Keybinds] [Settings]
+CreateSubBtn("Keybinds", function()
+    OpenDrawer("KEYBINDS", "HOTKEYS & SHORTCUTS", function(p)
         local c = Instance.new("TextLabel", p)
-        c.Size = UDim2.new(1, 0, 0, 24)
+        c.Size = UDim2.new(1, 0, 0, 60)
         c.BackgroundTransparency = 1
         c.Font = Enum.Font.Code
-        c.Text = "Dynamic Album Art Adaptation: Active\nReal-time Audio Spectrum Glow: Active"
+        c.Text = "RightControl : Toggle GUI\nF : Toggle Flight Mode\nN : Toggle Stepped Noclip\nCtrl + Click : Raycast Teleport\nT : Quick Menu Reopen"
         c.TextColor3 = GetColor("TextPrimary")
         c.TextSize = 9
         c.ZIndex = 52
@@ -1061,19 +1073,19 @@ CreateSubBtn("Adapt", function()
 end)
 
 CreateSubBtn("Settings", function()
-    OpenDrawer("Settings & Keybinds", function(p)
+    OpenDrawer("SETTINGS", "GLOBAL CONFIGURATION", function(p)
         local c = Instance.new("TextLabel", p)
         c.Size = UDim2.new(1, 0, 0, 40)
         c.BackgroundTransparency = 1
         c.Font = Enum.Font.Code
-        c.Text = "RightControl : Toggle GUI\nF : Toggle Flight Mode\nN : Toggle Noclip\nT : Quick Menu Reopen"
+        c.Text = "Translucent Glass Rendering: Active\nHardware Acceleration: Enabled\nAuto-Save Config: Enabled"
         c.TextColor3 = GetColor("TextPrimary")
         c.TextSize = 9
         c.ZIndex = 52
     end)
 end)
 
--- Tab Builder & Card Helpers
+-- Tab Builder (Single Unified Scrollbar per Tab)
 local TabPages = {}
 local TabButtons = {}
 local CurrentTab = ""
@@ -1113,25 +1125,42 @@ local function CreateTabPage(name: string, hasHeroBanner: boolean)
         topOffset = 38
     end
 
-    local LeftCol = Instance.new("ScrollingFrame", Page)
-    LeftCol.Size = UDim2.new(0.5, -3, 1, -topOffset)
-    LeftCol.Position = UDim2.new(0, 0, 0, topOffset)
+    -- ONE Single ScrollingFrame for the Entire Tab
+    local MainScroll = Instance.new("ScrollingFrame", Page)
+    MainScroll.Name = "MainScroll"
+    MainScroll.Size = UDim2.new(1, 0, 1, -topOffset)
+    MainScroll.Position = UDim2.new(0, 0, 0, topOffset)
+    MainScroll.BackgroundTransparency = 1
+    MainScroll.BorderSizePixel = 0
+    MainScroll.ScrollBarThickness = 2
+    MainScroll.ScrollBarImageColor3 = GetColor("Border")
+    MainScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    MainScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+    -- Dual Column Container inside the Single ScrollingFrame
+    local ColumnsContainer = Instance.new("Frame", MainScroll)
+    ColumnsContainer.Size = UDim2.new(1, -4, 0, 0)
+    ColumnsContainer.Position = UDim2.new(0, 0, 0, 0)
+    ColumnsContainer.AutomaticSize = Enum.AutomaticSize.Y
+    ColumnsContainer.BackgroundTransparency = 1
+
+    local LeftCol = Instance.new("Frame", ColumnsContainer)
+    LeftCol.Name = "LeftCol"
+    LeftCol.Size = UDim2.new(0.5, -3, 0, 0)
+    LeftCol.Position = UDim2.new(0, 0, 0, 0)
+    LeftCol.AutomaticSize = Enum.AutomaticSize.Y
     LeftCol.BackgroundTransparency = 1
-    LeftCol.BorderSizePixel = 0
-    LeftCol.ScrollBarThickness = 2
-    LeftCol.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
     local LeftLayout = Instance.new("UIListLayout", LeftCol)
     LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
     LeftLayout.Padding = UDim.new(0, 4)
 
-    local RightCol = Instance.new("ScrollingFrame", Page)
-    RightCol.Size = UDim2.new(0.5, -3, 1, -topOffset)
-    RightCol.Position = UDim2.new(0.5, 3, 0, topOffset)
+    local RightCol = Instance.new("Frame", ColumnsContainer)
+    RightCol.Name = "RightCol"
+    RightCol.Size = UDim2.new(0.5, -3, 0, 0)
+    RightCol.Position = UDim2.new(0.5, 3, 0, 0)
+    RightCol.AutomaticSize = Enum.AutomaticSize.Y
     RightCol.BackgroundTransparency = 1
-    RightCol.BorderSizePixel = 0
-    RightCol.ScrollBarThickness = 2
-    RightCol.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
     local RightLayout = Instance.new("UIListLayout", RightCol)
     RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1331,10 +1360,9 @@ local function AddButton(parent: Instance, label: string, onClick: () -> ())
 end
 
 --------------------------------------------------------------------------------
--- 8. TAB REGISTRATION & COMPLETE CONTENT POPULATION
+-- 8. TAB REGISTRATION & CONTENT
 --------------------------------------------------------------------------------
-
--- Register Navigation Tabs (Hero Banner only on 'Main')
+-- Hero banner ONLY on 'Main' tab!
 RegisterTab("Main", false, true)
 RegisterTab("Esp", false, false)
 RegisterTab("Music", false, false)
@@ -1343,7 +1371,7 @@ RegisterTab("Scripts", false, false)
 RegisterTab("Themes", true, false)
 
 ----------------------------------------------------------------------------
--- TAB 1: MAIN (Hero banner + Complete Movement, Stat, World & Camera cheats)
+-- TAB 1: MAIN (Hero Banner + Cheats)
 ----------------------------------------------------------------------------
 local mMove = CreateCard(TabPages["Main"].Left, "[Movement & Physics]")
 AddToggle(mMove, "Infinite Jump", false, function(s) State.InfiniteJump = s end)
@@ -1392,14 +1420,14 @@ AddButton(eRight, "Remove Fog", function() Lighting.FogEnd = 100000 end)
 ----------------------------------------------------------------------------
 local muLeft = CreateCard(TabPages["Music"].Left, "[Sound Engine Controls]")
 AddToggle(muLeft, "Sound Stream Enabled", false, function(s)
-    if s then PlayTrack(9048375035, "Lo-Fi Beats 1") else AudioStream:Pause() end
+    if s then PlayTrack(9048375035) else AudioStream:Pause() end
 end)
 AddSlider(muLeft, "Stream Volume", 0, 10, 1, function(v) AudioStream.Volume = v end)
 AddSlider(muLeft, "Stream Pitch", 0, 2, 1, function(v) AudioStream.PlaybackSpeed = v end)
 
 local muPresets = CreateCard(TabPages["Music"].Left, "[Audio Presets]")
 for _, p in ipairs(AudioPresets) do
-    AddButton(muPresets, p.Name, function() PlayTrack(p.Id, p.Name) end)
+    AddButton(muPresets, p.Name, function() PlayTrack(p.Id) end)
 end
 
 local muRight = CreateCard(TabPages["Music"].Right, "[Visualizer & Overlay]")
@@ -1476,4 +1504,4 @@ end
 -- Start on Main tab
 SwitchTab("Main")
 
-print("[Fih Menu]: Complete functional suite successfully booted.")
+print("[Fih Menu]: Single-scrollbar unified suite booted.")
