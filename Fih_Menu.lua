@@ -1,5 +1,5 @@
 -- Fih_Menu.lua
--- Complete Fih Menu Suite (Unified Single Scrollbar, Hero on Main Only, Toggle Drawers)
+-- Complete Fih Menu Suite with Global Reactive Theming & Interactive Music Controller
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -41,7 +41,7 @@ ScreenHost.DisplayOrder = 100
 ScreenHost.Parent = TargetParent
 
 --------------------------------------------------------------------------------
--- 1. THEME ENGINE
+-- 1. GLOBAL THEME ENGINE (Reactive Multi-Element Recoloring)
 --------------------------------------------------------------------------------
 local Tokens = {
     BackgroundPrimary   = Color3.fromRGB(18, 12, 26),
@@ -89,9 +89,15 @@ local function RegisterBinding(inst: Instance, prop: string, token: string)
     pcall(function() (inst :: any)[prop] = Tokens[token] end)
 end
 
-local function SetAccent(col: Color3)
+local function ApplyTheme(col: Color3)
     Tokens.Accent = col
     Tokens.BorderActive = col
+    Tokens.AccentGlow = Color3.new(
+        math.clamp(col.R * 1.2, 0, 1),
+        math.clamp(col.G * 1.2, 0, 1),
+        math.clamp(col.B * 1.2, 0, 1)
+    )
+
     for _, b in ipairs(Bindings) do
         if b.Instance and b.Instance.Parent then
             TweenService:Create(b.Instance, TweenInfo.new(0.30, Enum.EasingStyle.Quad), { [b.Property] = Tokens[b.Key] }):Play()
@@ -100,7 +106,77 @@ local function SetAccent(col: Color3)
 end
 
 --------------------------------------------------------------------------------
--- 2. BACKEND CHEAT ENGINE
+-- 2. AUDIO STREAM & INTERACTIVE PLAYLIST ENGINE
+--------------------------------------------------------------------------------
+local AudioStream = Instance.new("Sound")
+AudioStream.Name = "FihMenu_AudioStream"
+AudioStream.Looped = true
+AudioStream.Volume = 1.0
+AudioStream.PlaybackSpeed = 1.0
+AudioStream.Parent = SoundService
+
+local Playlist = {
+    { Title = "Lo-Fi Study Beats", Artist = "Universal Audio [Local]", Id = 9048375035, Cover = "rbxassetid://10849911991", Lyric = "Chill lo-fi study rhythm flowing..." },
+    { Title = "Synthwave Neon Sunset", Artist = "Retro Wave [Spotify]", Id = 9043887091, Cover = "rbxassetid://10849911991", Lyric = "Cruising down the digital highway at night" },
+    { Title = "Chill Ambient Rain", Artist = "Atmospheric Study [Local]", Id = 1837849285, Cover = "rbxassetid://10849911991", Lyric = "Gentle rain tapping against the glass pane" },
+    { Title = "Cyber Arcade 8-Bit", Artist = "Pixel Beats [Chiptune]", Id = 1845499092, Cover = "rbxassetid://10849911991", Lyric = "Insert coin to continue stage 01" },
+}
+
+local CurrentTrackIndex = 0
+local IsAudioPlaying = false
+local SpeedCycle = { 1.0, 1.25, 1.5, 2.0, 0.5 }
+local CurrentSpeedIndex = 1
+
+local OnTrackUpdated = Instance.new("BindableEvent")
+
+local function PlayTrackByIndex(idx: number)
+    if idx < 1 then idx = #Playlist end
+    if idx > #Playlist then idx = 1 end
+    CurrentTrackIndex = idx
+    local track = Playlist[idx]
+
+    AudioStream.SoundId = "rbxassetid://" .. tostring(track.Id)
+    AudioStream:Play()
+    IsAudioPlaying = true
+    OnTrackUpdated:Fire(track, true)
+end
+
+local function TogglePlayPause()
+    if CurrentTrackIndex == 0 then
+        PlayTrackByIndex(1)
+        return
+    end
+
+    if IsAudioPlaying then
+        AudioStream:Pause()
+        IsAudioPlaying = false
+        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], false)
+    else
+        AudioStream:Resume()
+        IsAudioPlaying = true
+        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], true)
+    end
+end
+
+local function NextTrack()
+    PlayTrackByIndex(CurrentTrackIndex == 0 and 1 or (CurrentTrackIndex + 1))
+end
+
+local function PrevTrack()
+    PlayTrackByIndex(CurrentTrackIndex == 0 and 1 or (CurrentTrackIndex - 1))
+end
+
+local function CycleSpeed()
+    CurrentSpeedIndex = (CurrentSpeedIndex % #SpeedCycle) + 1
+    local speed = SpeedCycle[CurrentSpeedIndex]
+    AudioStream.PlaybackSpeed = speed
+    if CurrentTrackIndex > 0 then
+        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], IsAudioPlaying)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- 3. BACKEND CHEAT ENGINE
 --------------------------------------------------------------------------------
 local State = {
     InfiniteJump = false,
@@ -108,7 +184,6 @@ local State = {
     FlySpeed = 55,
     Noclip = false,
     ClickTP = false,
-    AntiRagdoll = false,
     Floater = false,
     FloatY = 0,
     Spinbot = false,
@@ -133,7 +208,6 @@ local function GetHumanoid(char: Model?): Humanoid?
     return character and character:FindFirstChildOfClass("Humanoid")
 end
 
--- Infinite Jump
 UserInputService.JumpRequest:Connect(function()
     if State.InfiniteJump then
         local hum = GetHumanoid()
@@ -141,7 +215,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- Click TP (Ctrl + Click)
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if State.ClickTP and input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
@@ -153,7 +226,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- Stepped Noclip Loop
 RunService.Stepped:Connect(function()
     if State.Noclip and LocalPlayer.Character then
         for _, p in ipairs(LocalPlayer.Character:GetDescendants()) do
@@ -162,7 +234,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Spinbot & Walk Fling
 RunService.PostSimulation:Connect(function()
     local root = GetRoot()
     local hum = GetHumanoid()
@@ -177,11 +248,7 @@ RunService.PostSimulation:Connect(function()
     end
 end)
 
--- Flight Engine
-local FlightAtt: Attachment? = nil
-local FlightLV: LinearVelocity? = nil
-local FlightConn: RBXScriptConnection? = nil
-
+local FlightAtt, FlightLV, FlightConn = nil, nil, nil
 local function ToggleFlight(enable: boolean)
     State.Flight = enable
     if enable then
@@ -204,11 +271,7 @@ local function ToggleFlight(enable: boolean)
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0, 1, 0) end
             if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0, 1, 0) end
 
-            if move.Magnitude > 0 then
-                FlightLV.VectorVelocity = move.Unit * State.FlySpeed
-            else
-                FlightLV.VectorVelocity = Vector3.zero
-            end
+            FlightLV.VectorVelocity = move.Magnitude > 0 and (move.Unit * State.FlySpeed) or Vector3.zero
         end)
     else
         if FlightConn then FlightConn:Disconnect(); FlightConn = nil end
@@ -217,10 +280,7 @@ local function ToggleFlight(enable: boolean)
     end
 end
 
--- Stepped Floater
-local FloaterPart: BasePart? = nil
-local FloaterConn: RBXScriptConnection? = nil
-
+local FloaterPart, FloaterConn = nil, nil
 local function ToggleFloater(enable: boolean)
     State.Floater = enable
     if enable then
@@ -254,7 +314,6 @@ local function ToggleFloater(enable: boolean)
     end
 end
 
--- ESP Handlers
 local function UpdateHighlights(enable: boolean)
     State.Highlights = enable
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -356,27 +415,8 @@ local function ToggleFullbright(enable: boolean)
     end
 end
 
--- Audio Engine
-local AudioStream = Instance.new("Sound")
-AudioStream.Name = "FihMenu_AudioStream"
-AudioStream.Looped = true
-AudioStream.Volume = 1.0
-AudioStream.Parent = SoundService
-
-local AudioPresets = {
-    { Name = "Lo-Fi Beats 1", Id = 9048375035 },
-    { Name = "Chill Study 2", Id = 1837849285 },
-    { Name = "Synthwave 3",   Id = 9043887091 },
-    { Name = "Cyber Arcade 4", Id = 1845499092 },
-}
-
-local function PlayTrack(id: number)
-    AudioStream.SoundId = "rbxassetid://" .. tostring(id)
-    AudioStream:Play()
-end
-
 --------------------------------------------------------------------------------
--- 3. WINDOW BASE FACTORY
+-- 4. WINDOW BASE FACTORY
 --------------------------------------------------------------------------------
 local TopZIndex = 30
 
@@ -576,7 +616,7 @@ local function CreateWindow(title: string, defaultSize: UDim2, initialPos: UDim2
 end
 
 --------------------------------------------------------------------------------
--- 4. CHAT OVERLAY (Top-Left, Natural Top-to-Bottom Flow)
+-- 5. CHAT OVERLAY (Top-Left)
 --------------------------------------------------------------------------------
 pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false) end)
 
@@ -721,7 +761,7 @@ SendBtn.MouseButton1Click:Connect(function() Transmit(ChatBox.Text) end)
 ChatBox.FocusLost:Connect(function(enter) if enter then Transmit(ChatBox.Text) end end)
 
 --------------------------------------------------------------------------------
--- 5. PLAYER LIST OVERLAY (Right Side, Headshot Mugshots, Dynamic Scaling)
+-- 6. PLAYER LIST OVERLAY (Right Side)
 --------------------------------------------------------------------------------
 pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end)
 
@@ -789,7 +829,7 @@ Players.PlayerAdded:Connect(RefreshPlayerList)
 Players.PlayerRemoving:Connect(RefreshPlayerList)
 
 --------------------------------------------------------------------------------
--- 6. MUSIC HUD (Bottom Left)
+-- 7. MUSIC HUD (Bottom Left, Placeholder Idle State & Functional Controls)
 --------------------------------------------------------------------------------
 local MusicWin = CreateWindow("Fih HUD :: Now Playing & Synced Lyrics", UDim2.new(0, 320, 0, 130), UDim2.new(0, 15, 1, -145), Vector2.new(280, 110))
 
@@ -798,7 +838,15 @@ CoverArt.Size = UDim2.new(0, 80, 1, -10)
 CoverArt.Position = UDim2.new(0, 5, 0, 5)
 CoverArt.BackgroundColor3 = GetColor("Surface")
 CoverArt.BorderSizePixel = 0
-CoverArt.Image = "rbxassetid://10849911991"
+CoverArt.Image = ""
+
+local CoverPlaceholder = Instance.new("TextLabel", CoverArt)
+CoverPlaceholder.Size = UDim2.new(1, 0, 1, 0)
+CoverPlaceholder.BackgroundTransparency = 1
+CoverPlaceholder.Font = Enum.Font.Code
+CoverPlaceholder.Text = "NO AUDIO\nACTIVE"
+CoverPlaceholder.TextColor3 = GetColor("TextSecondary")
+CoverPlaceholder.TextSize = 9
 
 local SongDetails = Instance.new("Frame", MusicWin.Content)
 SongDetails.Size = UDim2.new(1, -95, 1, -10)
@@ -809,7 +857,7 @@ local SongTitleLabel = Instance.new("TextLabel", SongDetails)
 SongTitleLabel.Size = UDim2.new(1, 0, 0, 14)
 SongTitleLabel.BackgroundTransparency = 1
 SongTitleLabel.Font = Enum.Font.Code
-SongTitleLabel.Text = "you make me sick bitch!!"
+SongTitleLabel.Text = "None Playing"
 SongTitleLabel.TextColor3 = GetColor("Accent")
 SongTitleLabel.TextSize = 9
 SongTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -820,7 +868,7 @@ ArtistLabel.Size = UDim2.new(1, 0, 0, 12)
 ArtistLabel.Position = UDim2.new(0, 0, 0, 14)
 ArtistLabel.BackgroundTransparency = 1
 ArtistLabel.Font = Enum.Font.Code
-ArtistLabel.Text = "Ashnikko [Spotify]"
+ArtistLabel.Text = "[Idle]"
 ArtistLabel.TextColor3 = Color3.fromRGB(85, 170, 255)
 ArtistLabel.TextSize = 8
 ArtistLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -830,20 +878,38 @@ LyricsLabel.Size = UDim2.new(1, 0, 0, 14)
 LyricsLabel.Position = UDim2.new(0, 0, 0, 28)
 LyricsLabel.BackgroundTransparency = 1
 LyricsLabel.Font = Enum.Font.Code
-LyricsLabel.Text = "Starting to tell me that it's okay"
+LyricsLabel.Text = "No lyrics available"
 LyricsLabel.TextColor3 = GetColor("TextSecondary")
 LyricsLabel.TextSize = 8
 LyricsLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local ControlsBar = Instance.new("TextLabel", SongDetails)
-ControlsBar.Size = UDim2.new(1, 0, 0, 14)
+-- Interactive Audio Controls Bar
+local ControlsBar = Instance.new("Frame", SongDetails)
+ControlsBar.Size = UDim2.new(1, 0, 0, 16)
 ControlsBar.Position = UDim2.new(0, 0, 0, 44)
 ControlsBar.BackgroundTransparency = 1
-ControlsBar.Font = Enum.Font.Code
-ControlsBar.Text = "[|<]  [||]  [>|]   VOL [====] SPEED [1x]"
-ControlsBar.TextColor3 = GetColor("TextPrimary")
-ControlsBar.TextSize = 8
-ControlsBar.TextXAlignment = Enum.TextXAlignment.Left
+
+local ControlsLayout = Instance.new("UIListLayout", ControlsBar)
+ControlsLayout.FillDirection = Enum.FillDirection.Horizontal
+ControlsLayout.Padding = UDim.new(0, 4)
+
+local function CreateAudioBtn(txt: string, w: number, onClick: () -> ())
+    local b = Instance.new("TextButton", ControlsBar)
+    b.Size = UDim2.new(0, w, 1, 0)
+    b.BackgroundColor3 = GetColor("Surface")
+    b.BorderSizePixel = 0
+    b.Font = Enum.Font.Code
+    b.Text = txt
+    b.TextColor3 = GetColor("TextPrimary")
+    b.TextSize = 8
+    b.MouseButton1Click:Connect(onClick)
+    return b
+end
+
+local PrevBtn = CreateAudioBtn("[|<]", 22, PrevTrack)
+local PlayBtn = CreateAudioBtn("[▶]", 22, TogglePlayPause)
+local NextBtn = CreateAudioBtn("[>|]", 22, NextTrack)
+local SpeedBtn = CreateAudioBtn("SPD: 1x", 48, CycleSpeed)
 
 local VisualizerFrame = Instance.new("Frame", SongDetails)
 VisualizerFrame.Size = UDim2.new(1, 0, 0, 22)
@@ -861,26 +927,50 @@ VisLayout.Padding = UDim.new(0, 2)
 local VisualizerBars = {}
 for i = 1, 16 do
     local bar = Instance.new("Frame", VisualizerFrame)
-    bar.Size = UDim2.new(0, 7, 0, 4)
+    bar.Size = UDim2.new(0, 7, 0, 3)
     bar.BackgroundColor3 = GetColor("Accent")
     bar.BorderSizePixel = 0
     RegisterBinding(bar, "BackgroundColor3", "Accent")
     table.insert(VisualizerBars, bar)
 end
 
+-- Reactive Audio State Listener
+OnTrackUpdated.Event:Connect(function(track, isPlaying)
+    if track then
+        CoverArt.Image = track.Cover or ""
+        CoverPlaceholder.Visible = (track.Cover == nil or track.Cover == "")
+        SongTitleLabel.Text = track.Title
+        ArtistLabel.Text = track.Artist
+        LyricsLabel.Text = track.Lyric
+        PlayBtn.Text = isPlaying and "[||]" or "[▶]"
+        SpeedBtn.Text = "SPD: " .. tostring(SpeedCycle[CurrentSpeedIndex]) .. "x"
+    else
+        CoverArt.Image = ""
+        CoverPlaceholder.Visible = true
+        SongTitleLabel.Text = "None Playing"
+        ArtistLabel.Text = "[Idle]"
+        LyricsLabel.Text = "No lyrics available"
+        PlayBtn.Text = "[▶]"
+    end
+end)
+
 task.spawn(function()
     while true do
         task.wait(0.08)
         local t = tick()
         for idx, bar in ipairs(VisualizerBars) do
-            local noiseVal = math.noise(idx * 0.35, t * 4, 0)
-            bar.Size = UDim2.new(0, 7, 0, math.clamp(math.abs(noiseVal) * 20, 3, 20))
+            if IsAudioPlaying then
+                local noiseVal = math.noise(idx * 0.35, t * 4, 0)
+                bar.Size = UDim2.new(0, 7, 0, math.clamp(math.abs(noiseVal) * 20, 3, 20))
+            else
+                bar.Size = UDim2.new(0, 7, 0, 3)
+            end
         end
     end
 end)
 
 --------------------------------------------------------------------------------
--- 7. MAIN HUB WINDOW (Single Unified Scrollbar, Hero on Main Only, Toggle Drawers)
+-- 8. MAIN HUB WINDOW (Hero on Main Only, Unified Scroll, Toggle Drawers)
 --------------------------------------------------------------------------------
 local MainWin = CreateWindow("Fih Ui", UDim2.new(0, 580, 0, 360), UDim2.new(0.5, -290, 0.5, -180), Vector2.new(480, 280))
 
@@ -974,6 +1064,7 @@ DrawerOverlay.Visible = false
 local DrawerStroke = Instance.new("UIStroke", DrawerOverlay)
 DrawerStroke.Thickness = 1
 DrawerStroke.Color = GetColor("Accent")
+RegisterBinding(DrawerStroke, "Color", "Accent")
 
 local DrawerHeader = Instance.new("Frame", DrawerOverlay)
 DrawerHeader.Size = UDim2.new(1, 0, 0, 22)
@@ -991,6 +1082,7 @@ DrawerTitle.TextColor3 = GetColor("Accent")
 DrawerTitle.TextSize = 10
 DrawerTitle.TextXAlignment = Enum.TextXAlignment.Left
 DrawerTitle.ZIndex = 52
+RegisterBinding(DrawerTitle, "TextColor3", "Accent")
 
 local DrawerClose = Instance.new("TextButton", DrawerHeader)
 DrawerClose.Size = UDim2.new(0, 18, 0, 16)
@@ -1058,7 +1150,6 @@ local function CreateSubBtn(txt: string, onClick: () -> ())
     b.MouseButton1Click:Connect(onClick)
 end
 
--- Top Buttons: [Keybinds] [Settings]
 CreateSubBtn("Keybinds", function()
     OpenDrawer("KEYBINDS", "HOTKEYS & SHORTCUTS", function(p)
         local c = Instance.new("TextLabel", p)
@@ -1125,7 +1216,6 @@ local function CreateTabPage(name: string, hasHeroBanner: boolean)
         topOffset = 38
     end
 
-    -- ONE Single ScrollingFrame for the Entire Tab
     local MainScroll = Instance.new("ScrollingFrame", Page)
     MainScroll.Name = "MainScroll"
     MainScroll.Size = UDim2.new(1, 0, 1, -topOffset)
@@ -1137,7 +1227,6 @@ local function CreateTabPage(name: string, hasHeroBanner: boolean)
     MainScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     MainScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-    -- Dual Column Container inside the Single ScrollingFrame
     local ColumnsContainer = Instance.new("Frame", MainScroll)
     ColumnsContainer.Size = UDim2.new(1, -4, 0, 0)
     ColumnsContainer.Position = UDim2.new(0, 0, 0, 0)
@@ -1269,6 +1358,7 @@ local function AddToggle(parent: Instance, label: string, default: boolean, cb: 
     box.Position = UDim2.new(1, -14, 0.5, -5)
     box.BackgroundColor3 = state and GetColor("Accent") or GetColor("Surface")
     box.BorderSizePixel = 0
+    RegisterBinding(box, "BackgroundColor3", state and "Accent" or "Surface")
 
     local check = Instance.new("TextLabel", box)
     check.Size = UDim2.new(1, 0, 1, 0)
@@ -1360,9 +1450,8 @@ local function AddButton(parent: Instance, label: string, onClick: () -> ())
 end
 
 --------------------------------------------------------------------------------
--- 8. TAB REGISTRATION & CONTENT
+-- 9. TAB REGISTRATION & CONTENT
 --------------------------------------------------------------------------------
--- Hero banner ONLY on 'Main' tab!
 RegisterTab("Main", false, true)
 RegisterTab("Esp", false, false)
 RegisterTab("Music", false, false)
@@ -1371,7 +1460,7 @@ RegisterTab("Scripts", false, false)
 RegisterTab("Themes", true, false)
 
 ----------------------------------------------------------------------------
--- TAB 1: MAIN (Hero Banner + Cheats)
+-- TAB 1: MAIN (Hero Banner + Complete Cheats)
 ----------------------------------------------------------------------------
 local mMove = CreateCard(TabPages["Main"].Left, "[Movement & Physics]")
 AddToggle(mMove, "Infinite Jump", false, function(s) State.InfiniteJump = s end)
@@ -1416,21 +1505,18 @@ AddSlider(eRight, "Camera FOV", 60, 120, 70, function(v) Camera.FieldOfView = v 
 AddButton(eRight, "Remove Fog", function() Lighting.FogEnd = 100000 end)
 
 ----------------------------------------------------------------------------
--- TAB 3: MUSIC (Audio Engine, Presets & Controls)
+-- TAB 3: MUSIC (Sound Engine, Presets & Controls)
 ----------------------------------------------------------------------------
-local muLeft = CreateCard(TabPages["Music"].Left, "[Sound Engine Controls]")
-AddToggle(muLeft, "Sound Stream Enabled", false, function(s)
-    if s then PlayTrack(9048375035) else AudioStream:Pause() end
-end)
+local muLeft = CreateCard(TabPages["Music"].Left, "[Audio Streamer]")
+AddToggle(muLeft, "Stream Play / Pause", false, function(s) TogglePlayPause() end)
 AddSlider(muLeft, "Stream Volume", 0, 10, 1, function(v) AudioStream.Volume = v end)
-AddSlider(muLeft, "Stream Pitch", 0, 2, 1, function(v) AudioStream.PlaybackSpeed = v end)
 
-local muPresets = CreateCard(TabPages["Music"].Left, "[Audio Presets]")
-for _, p in ipairs(AudioPresets) do
-    AddButton(muPresets, p.Name, function() PlayTrack(p.Id) end)
+local muPresets = CreateCard(TabPages["Music"].Left, "[Playlist Presets]")
+for idx, p in ipairs(Playlist) do
+    AddButton(muPresets, p.Title, function() PlayTrackByIndex(idx) end)
 end
 
-local muRight = CreateCard(TabPages["Music"].Right, "[Visualizer & Overlay]")
+local muRight = CreateCard(TabPages["Music"].Right, "[Overlay Toggles]")
 AddToggle(muRight, "Music HUD Visible", true, function(s) MusicWin.Frame.Visible = s end)
 AddToggle(muRight, "Chat Overlay Visible", true, function(s) ChatWin.Frame.Visible = s end)
 AddToggle(muRight, "Player List Visible", true, function(s) PlrWin.Frame.Visible = s end)
@@ -1447,6 +1533,7 @@ TargetNameLabel.Text = "Target: [Select in Player List]"
 TargetNameLabel.TextColor3 = GetColor("Accent")
 TargetNameLabel.TextSize = 9
 TargetNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+RegisterBinding(TargetNameLabel, "TextColor3", "Accent")
 
 AddButton(tLeft, "Teleport To Target", function()
     if State.SelectedTarget and State.SelectedTarget.Character then
@@ -1494,14 +1581,14 @@ local sRight = CreateCard(TabPages["Scripts"].Right, "[Custom Code Slot]")
 AddButton(sRight, "Execute Potassium Hooks", function() print("[Fih Menu]: Hooks active.") end)
 
 ----------------------------------------------------------------------------
--- TAB 6: THEMES (Preset Buttons & Accent Transitions)
+-- TAB 6: THEMES (Global Multi-Element Recoloring)
 ----------------------------------------------------------------------------
 local thLeft = CreateCard(TabPages["Themes"].Left, "[Theme Presets]")
 for name, col in pairs(Presets) do
-    AddButton(thLeft, name, function() SetAccent(col) end)
+    AddButton(thLeft, name, function() ApplyTheme(col) end)
 end
 
 -- Start on Main tab
 SwitchTab("Main")
 
-print("[Fih Menu]: Single-scrollbar unified suite booted.")
+print("[Fih Menu]: Suite updated with global theming & interactive music.")
