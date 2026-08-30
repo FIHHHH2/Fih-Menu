@@ -14,30 +14,30 @@ local CustomPlayerList = {}
 function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManager: any, signalMod: any, flingMod: any)
     pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end)
 
-    local PlrWindow = windowBase.new("PLAYERS : 0 ONLINE", UDim2.new(0, 240, 0, 180), UDim2.new(1, -260, 0, 30), Vector2.new(210, 120), screenHost, themeManager, signalMod)
+    local PlrWindow = windowBase.new("Players (0)", UDim2.new(0, 230, 0, 180), UDim2.new(1, -250, 0, 30), Vector2.new(200, 120), screenHost, themeManager, signalMod)
 
     local PlayerScroll = Instance.new("ScrollingFrame")
-    PlayerScroll.Size = UDim2.new(1, -12, 1, -12)
-    PlayerScroll.Position = UDim2.new(0, 6, 0, 6)
+    PlayerScroll.Size = UDim2.new(1, -10, 1, -10)
+    PlayerScroll.Position = UDim2.new(0, 5, 0, 5)
     PlayerScroll.BackgroundTransparency = 1
     PlayerScroll.BorderSizePixel = 0
-    PlayerScroll.ScrollBarThickness = 3
+    PlayerScroll.ScrollBarThickness = 2
     PlayerScroll.ScrollBarImageColor3 = themeManager.Get("Border")
     PlayerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     PlayerScroll.Parent = PlrWindow.Content
 
     local PlrLayout = Instance.new("UIListLayout")
     PlrLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    PlrLayout.Padding = UDim.new(0, 4)
+    PlrLayout.Padding = UDim.new(0, 3)
     PlrLayout.Parent = PlayerScroll
 
-    -- Context Drawer Window (Strictly Squared)
-    local DrawerWindow = windowBase.new("Select Plr", UDim2.new(0, 190, 0, 230), UDim2.new(1, -460, 0, 30), Vector2.new(170, 190), screenHost, themeManager, signalMod)
+    -- Context Drawer Window
+    local DrawerWindow = windowBase.new("Select Plr", UDim2.new(0, 190, 0, 230), UDim2.new(1, -450, 0, 30), Vector2.new(170, 190), screenHost, themeManager, signalMod)
     DrawerWindow.Frame.Visible = false
 
     local DrawerContent = DrawerWindow.Content
     local AvatarImg = Instance.new("ImageLabel")
-    AvatarImg.Size = UDim2.new(0, 52, 0, 52)
+    AvatarImg.Size = UDim2.new(0, 48, 0, 48)
     AvatarImg.Position = UDim2.new(0, 8, 0, 8)
     AvatarImg.BackgroundColor3 = themeManager.Get("Surface")
     AvatarImg.BackgroundTransparency = 0.3
@@ -50,8 +50,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     AvatarStroke.Parent = AvatarImg
 
     local PlrNameLabel = Instance.new("TextLabel")
-    PlrNameLabel.Size = UDim2.new(1, -70, 0, 24)
-    PlrNameLabel.Position = UDim2.new(0, 66, 0, 8)
+    PlrNameLabel.Size = UDim2.new(1, -66, 0, 22)
+    PlrNameLabel.Position = UDim2.new(0, 62, 0, 8)
     PlrNameLabel.BackgroundTransparency = 1
     PlrNameLabel.Font = Enum.Font.Code
     PlrNameLabel.Text = "Name"
@@ -61,8 +61,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     PlrNameLabel.Parent = DrawerContent
 
     local PlrIdLabel = Instance.new("TextLabel")
-    PlrIdLabel.Size = UDim2.new(1, -70, 0, 20)
-    PlrIdLabel.Position = UDim2.new(0, 66, 0, 32)
+    PlrIdLabel.Size = UDim2.new(1, -66, 0, 18)
+    PlrIdLabel.Position = UDim2.new(0, 62, 0, 30)
     PlrIdLabel.BackgroundTransparency = 1
     PlrIdLabel.Font = Enum.Font.Code
     PlrIdLabel.Text = "ID: 0"
@@ -72,8 +72,8 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     PlrIdLabel.Parent = DrawerContent
 
     local DrawerActionContainer = Instance.new("Frame")
-    DrawerActionContainer.Size = UDim2.new(1, -16, 1, -68)
-    DrawerActionContainer.Position = UDim2.new(0, 8, 0, 64)
+    DrawerActionContainer.Size = UDim2.new(1, -16, 1, -64)
+    DrawerActionContainer.Position = UDim2.new(0, 8, 0, 58)
     DrawerActionContainer.BackgroundTransparency = 1
     DrawerActionContainer.Parent = DrawerContent
 
@@ -119,18 +119,14 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     CreateDrawerButton("Spectate", function()
         if SelectedTargetPlayer and SelectedTargetPlayer.Character then
             local hum = SelectedTargetPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                Workspace.CurrentCamera.CameraSubject = hum
-            end
+            if hum then Workspace.CurrentCamera.CameraSubject = hum end
         end
     end)
     CreateDrawerButton("Teleport To", function()
         if SelectedTargetPlayer and SelectedTargetPlayer.Character then
             local tRoot = SelectedTargetPlayer.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
             local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
-            if tRoot and myRoot then
-                myRoot.CFrame = tRoot.CFrame + Vector3.new(0, 2, 0)
-            end
+            if tRoot and myRoot then myRoot.CFrame = tRoot.CFrame + Vector3.new(0, 2, 0) end
         end
     end)
     CreateDrawerButton("Fling Player", function()
@@ -158,23 +154,20 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
     local PlayerRows = {}
     local function RefreshList()
         local all = Players:GetPlayers()
-        PlrWindow.TitleLabel.Text = string.format("PLAYERS : %d ONLINE", #all)
+        PlrWindow.TitleLabel.Text = string.format("Players (%d)", #all)
 
-        -- Dynamic Y-Axis Scaling
-        local targetHeight = math.clamp(32 + (#all * 32), 110, 480)
-        TweenService:Create(PlrWindow.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        local targetHeight = math.clamp(30 + (#all * 28), 100, 520)
+        TweenService:Create(PlrWindow.Frame, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, PlrWindow.Frame.AbsoluteSize.X, 0, targetHeight)
         }):Play()
 
-        for _, row in pairs(PlayerRows) do
-            row:Destroy()
-        end
+        for _, row in pairs(PlayerRows) do row:Destroy() end
         table.clear(PlayerRows)
 
         for i, plr in ipairs(all) do
             local row = Instance.new("TextButton")
             row.Name = "Row_" .. plr.Name
-            row.Size = UDim2.new(1, 0, 0, 28)
+            row.Size = UDim2.new(1, 0, 0, 26)
             row.Position = UDim2.new(1.3, 0, 0, 0)
             row.BackgroundColor3 = themeManager.Get("Surface")
             row.BackgroundTransparency = 0.3
@@ -190,10 +183,9 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
             rowStroke.Transparency = 0.4
             rowStroke.Parent = row
 
-            -- Player Profile Mugshot
             local mugshot = Instance.new("ImageLabel")
-            mugshot.Size = UDim2.new(0, 22, 0, 22)
-            mugshot.Position = UDim2.new(0, 4, 0.5, -11)
+            mugshot.Size = UDim2.new(0, 20, 0, 20)
+            mugshot.Position = UDim2.new(0, 4, 0.5, -10)
             mugshot.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
             mugshot.BackgroundTransparency = 0.2
             mugshot.BorderSizePixel = 0
@@ -201,23 +193,21 @@ function CustomPlayerList.new(windowBase: any, screenHost: ScreenGui, themeManag
             mugshot.Parent = row
 
             local nameLbl = Instance.new("TextLabel")
-            nameLbl.Size = UDim2.new(1, -34, 1, 0)
-            nameLbl.Position = UDim2.new(0, 32, 0, 0)
+            nameLbl.Size = UDim2.new(1, -30, 1, 0)
+            nameLbl.Position = UDim2.new(0, 28, 0, 0)
             nameLbl.BackgroundTransparency = 1
             nameLbl.Font = Enum.Font.Code
             nameLbl.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
             nameLbl.TextColor3 = themeManager.Get("TextPrimary")
-            nameLbl.TextSize = 10
+            nameLbl.TextSize = 9
             nameLbl.TextXAlignment = Enum.TextXAlignment.Left
             nameLbl.Parent = row
 
-            row.MouseButton1Click:Connect(function()
-                OpenDrawer(plr)
-            end)
+            row.MouseButton1Click:Connect(function() OpenDrawer(plr) end)
 
-            task.delay((i - 1) * 0.035, function()
+            task.delay((i - 1) * 0.025, function()
                 if row and row.Parent then
-                    TweenService:Create(row, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    TweenService:Create(row, TweenInfo.new(0.30, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                         Position = UDim2.new(0, 0, 0, 0)
                     }):Play()
                 end

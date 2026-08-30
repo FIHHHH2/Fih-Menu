@@ -1,5 +1,5 @@
 -- Interface/CustomChat.lua
--- Top-Left CoreGui Chat Replacement with Live Two-Way Ingestion & Voice Waveform
+-- Top-Left CoreGui Chat Replacement with Natural Top-to-Bottom Stream & Live Ingestion
 
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
@@ -14,9 +14,9 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false) end)
 
     -- Fixed at Top-Left Screen Position
-    local ChatWindow = windowBase.new("Chat", UDim2.new(0, 340, 0, 250), UDim2.new(0, 20, 0, 20), Vector2.new(280, 190), screenHost, themeManager, signalMod)
+    local ChatWindow = windowBase.new("Chat", UDim2.new(0, 360, 0, 240), UDim2.new(0, 20, 0, 20), Vector2.new(280, 180), screenHost, themeManager, signalMod)
 
-    -- TopBar Controls: Settings, Hamburger (≡), Voice Visualizer
+    -- TopBar Controls: Settings (⚙), Hamburger (≡), Waveform Visualizer
     local ChatTopControls = Instance.new("Frame")
     ChatTopControls.Size = UDim2.new(0, 110, 1, 0)
     ChatTopControls.Position = UDim2.new(0, 48, 0, 0)
@@ -29,7 +29,6 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     TopControlsLayout.Padding = UDim.new(0, 4)
     TopControlsLayout.Parent = ChatTopControls
 
-    -- Settings Icon Button
     local SettingBtn = Instance.new("TextButton")
     SettingBtn.Size = UDim2.new(0, 20, 0, 18)
     SettingBtn.BackgroundColor3 = themeManager.Get("Surface")
@@ -47,7 +46,6 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     SettingStroke.Transparency = 0.4
     SettingStroke.Parent = SettingBtn
 
-    -- Hamburger Menu Button
     local MenuBtn = Instance.new("TextButton")
     MenuBtn.Size = UDim2.new(0, 20, 0, 18)
     MenuBtn.BackgroundColor3 = themeManager.Get("Surface")
@@ -65,7 +63,6 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     MenuStroke.Transparency = 0.4
     MenuStroke.Parent = MenuBtn
 
-    -- Voice Chat Waveform Visualizer
     local WaveformBar = Instance.new("Frame")
     WaveformBar.Size = UDim2.new(0, 36, 0, 12)
     WaveformBar.BackgroundColor3 = themeManager.Get("Surface")
@@ -94,50 +91,54 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
         end
     end)
 
-    -- Message Scroll Frame (Strictly Squared)
+    -- Message Scroll Frame (Natural Top-to-Bottom Stream)
     local MessageScroll = Instance.new("ScrollingFrame")
     MessageScroll.Name = "Messages"
     MessageScroll.Size = UDim2.new(1, -12, 1, -38)
     MessageScroll.Position = UDim2.new(0, 6, 0, 6)
     MessageScroll.BackgroundTransparency = 1
     MessageScroll.BorderSizePixel = 0
-    MessageScroll.ScrollBarThickness = 3
+    MessageScroll.ScrollBarThickness = 2
     MessageScroll.ScrollBarImageColor3 = themeManager.Get("Border")
+    MessageScroll.ScrollBarImageTransparency = 0.5
     MessageScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    MessageScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     MessageScroll.Parent = ChatWindow.Content
 
     local MsgLayout = Instance.new("UIListLayout")
     MsgLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    MsgLayout.Padding = UDim.new(0, 4)
-    MsgLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    MsgLayout.Padding = UDim.new(0, 3)
+    MsgLayout.VerticalAlignment = Enum.VerticalAlignment.Top
     MsgLayout.Parent = MessageScroll
 
-    local function AddChatMessage(sender: string, text: string, colorHex: string?)
-        local hex = colorHex or "55AAFF"
+    local function AddChatMessage(sender: string, text: string, isSelf: boolean)
+        local hex = isSelf and "FF3CB4" or "55AAFF"
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(1, -6, 0, 0)
         lbl.AutomaticSize = Enum.AutomaticSize.Y
         lbl.BackgroundTransparency = 1
         lbl.Font = Enum.Font.Code
         lbl.RichText = true
-        lbl.Text = string.format("[USER] <font color=\"#%s\"><b>%s</b></font>: %s", hex, sender, text)
+        lbl.Text = string.format("<font color=\"#%s\"><b>%s</b></font>: %s", hex, sender, text)
         lbl.TextColor3 = themeManager.Get("TextPrimary")
         lbl.TextSize = 11
         lbl.TextWrapped = true
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = MessageScroll
 
-        MessageScroll.CanvasPosition = Vector2.new(0, MessageScroll.AbsoluteCanvasSize.Y)
+        task.defer(function()
+            MessageScroll.CanvasPosition = Vector2.new(0, MessageScroll.AbsoluteCanvasSize.Y)
+        end)
     end
 
-    -- Universal Live Chat Ingestion (Modern TextChatService + Legacy Events)
+    -- Dual-Hook Ingestion
     pcall(function()
         if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-            TextChatService.MessageReceived:Connect(function(textChatMessage)
-                if textChatMessage.TextSource then
-                    local senderPlr = Players:GetPlayerByUserId(textChatMessage.TextSource.UserId)
-                    local name = senderPlr and senderPlr.DisplayName or textChatMessage.TextSource.Name
-                    AddChatMessage(name, textChatMessage.Text, "55AAFF")
+            TextChatService.MessageReceived:Connect(function(msg)
+                if msg.TextSource then
+                    local p = Players:GetPlayerByUserId(msg.TextSource.UserId)
+                    local name = p and p.DisplayName or msg.TextSource.Name
+                    AddChatMessage(name, msg.Text, p == LocalPlayer)
                 end
             end)
         else
@@ -145,7 +146,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
             if sayEvent and sayEvent:FindFirstChild("OnMessageDoneFiltering") then
                 (sayEvent.OnMessageDoneFiltering :: any).OnClientEvent:Connect(function(data)
                     if data and data.FromSpeaker and data.Message then
-                        AddChatMessage(tostring(data.FromSpeaker), tostring(data.Message), "55AAFF")
+                        AddChatMessage(tostring(data.FromSpeaker), tostring(data.Message), tostring(data.FromSpeaker) == LocalPlayer.Name)
                     end
                 end)
             end
@@ -168,7 +169,7 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     ChatInputStroke.Parent = ChatInputBar
 
     local QuickBtn = Instance.new("TextButton")
-    QuickBtn.Size = UDim2.new(0, 46, 1, 0)
+    QuickBtn.Size = UDim2.new(0, 44, 1, 0)
     QuickBtn.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
     QuickBtn.BackgroundTransparency = 0.2
     QuickBtn.BorderSizePixel = 0
@@ -179,15 +180,15 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     QuickBtn.Parent = ChatInputBar
 
     local ChatBox = Instance.new("TextBox")
-    ChatBox.Size = UDim2.new(1, -96, 1, 0)
-    ChatBox.Position = UDim2.new(0, 48, 0, 0)
+    ChatBox.Size = UDim2.new(1, -94, 1, 0)
+    ChatBox.Position = UDim2.new(0, 46, 0, 0)
     ChatBox.BackgroundTransparency = 1
     ChatBox.Font = Enum.Font.Code
-    ChatBox.PlaceholderText = "TYPE HERE..."
+    ChatBox.PlaceholderText = "To chat click here or press / key"
     ChatBox.PlaceholderColor3 = themeManager.Get("TextSecondary")
     ChatBox.Text = ""
     ChatBox.TextColor3 = themeManager.Get("TextPrimary")
-    ChatBox.TextSize = 11
+    ChatBox.TextSize = 10
     ChatBox.ClearTextOnFocus = false
     ChatBox.TextXAlignment = Enum.TextXAlignment.Left
     ChatBox.Parent = ChatInputBar
@@ -226,9 +227,9 @@ function CustomChat.new(windowBase: any, screenHost: ScreenGui, themeManager: an
     SendBtn.MouseButton1Click:Connect(function() Transmit(ChatBox.Text) end)
     ChatBox.FocusLost:Connect(function(enter) if enter then Transmit(ChatBox.Text) end end)
 
-    -- Quick Chat Macro Panel (Strictly Squared)
+    -- Quick Chat Macro Panel
     local MacroFrame = Instance.new("Frame")
-    MacroFrame.Size = UDim2.new(0, 120, 0, 95)
+    MacroFrame.Size = UDim2.new(0, 130, 0, 95)
     MacroFrame.Position = UDim2.new(0, 6, 1, -126)
     MacroFrame.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
     MacroFrame.BackgroundTransparency = 0.15

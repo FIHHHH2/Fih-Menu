@@ -1,5 +1,5 @@
 -- Interface/MainMenu.lua
--- Translucent Squared Main Hub GUI with Topbar Song Ticker, Sliding Settings/Keybinds Drawers & Rich Feature Set
+-- Translucent Cyberpunk Main Hub GUI with Inside-Tab Header, Tab-Contained Sliding Drawer & Rich Wireframe Grid
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -23,14 +23,14 @@ function MainMenu.new(
     musicEngine: any,
     windows: { [string]: any }
 )
-    local HubWindow = windowBase.new("FIHMENU", UDim2.new(0, 660, 0, 440), UDim2.new(0.5, -330, 0.5, -220), Vector2.new(540, 360), screenHost, themeManager, signalMod)
+    local HubWindow = windowBase.new("Fih Ui", UDim2.new(0, 680, 0, 440), UDim2.new(0.5, -340, 0.5, -220), Vector2.new(560, 360), screenHost, themeManager, signalMod)
 
-    -- 1. TopBar: FIHMENU Logo \ Full-Width Grey-Hashed Song Ticker (Before Controls)
+    -- 1. TopBar: Fih Ui \ Full-Width Grey-Hashed Song Ticker (Before Controls)
     local TopSongBanner = Instance.new("TextLabel")
     TopSongBanner.Size = UDim2.new(1, -150, 1, -6)
     TopSongBanner.Position = UDim2.new(0, 85, 0, 3)
     TopSongBanner.BackgroundColor3 = themeManager.Get("Surface")
-    TopSongBanner.BackgroundTransparency = 0.35
+    TopSongBanner.BackgroundTransparency = 0.4
     TopSongBanner.BorderSizePixel = 0
     TopSongBanner.Font = Enum.Font.Code
     TopSongBanner.Text = "♪ Song: Lo-Fi Study Beats // Media Status: Active"
@@ -45,16 +45,64 @@ function MainMenu.new(
     BannerStroke.Transparency = 0.4
     BannerStroke.Parent = TopSongBanner
 
-    -- 2. Sub-Header Area (Inside Main GUI Content Top Area)
-    local SubHeader = Instance.new("Frame")
-    SubHeader.Size = UDim2.new(1, -16, 0, 26)
-    SubHeader.Position = UDim2.new(0, 8, 0, 6)
-    SubHeader.BackgroundTransparency = 1
-    SubHeader.Parent = HubWindow.Content
+    -- 2. Left Navigation Rail (Strictly Squared, Crosshatch Pattern Background)
+    local NavRail = Instance.new("Frame")
+    NavRail.Name = "NavRail"
+    NavRail.Size = UDim2.new(0, 100, 1, -12)
+    NavRail.Position = UDim2.new(0, 8, 0, 6)
+    NavRail.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
+    NavRail.BackgroundTransparency = 0.25
+    NavRail.BorderSizePixel = 0
+    NavRail.Parent = HubWindow.Content
 
-    -- Left: Dynamic Tab Tag (Scales with text width, NO 'T A B')
+    local NavRailStroke = Instance.new("UIStroke")
+    NavRailStroke.Thickness = 1
+    NavRailStroke.Color = themeManager.Get("Border")
+    NavRailStroke.Transparency = 0.4
+    NavRailStroke.Parent = NavRail
+
+    local NavTopList = Instance.new("Frame")
+    NavTopList.Size = UDim2.new(1, 0, 1, -34)
+    NavTopList.BackgroundTransparency = 1
+    NavTopList.Parent = NavRail
+
+    local NavLayout = Instance.new("UIListLayout")
+    NavLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    NavLayout.Padding = UDim.new(0, 4)
+    NavLayout.Parent = NavTopList
+
+    local NavPad = Instance.new("UIPadding")
+    NavPad.PaddingTop = UDim.new(0, 6)
+    NavPad.PaddingLeft = UDim.new(0, 6)
+    NavPad.PaddingRight = UDim.new(0, 6)
+    NavPad.Parent = NavTopList
+
+    -- Pinned Bottom Themes Section
+    local NavBottomSection = Instance.new("Frame")
+    NavBottomSection.Size = UDim2.new(1, -12, 0, 24)
+    NavBottomSection.Position = UDim2.new(0, 6, 1, -28)
+    NavBottomSection.BackgroundTransparency = 1
+    NavBottomSection.Parent = NavRail
+
+    -- 3. Right Content Area (Contains Inside-Tab Subheader & Tab Views)
+    local RightContentArea = Instance.new("Frame")
+    RightContentArea.Name = "RightContentArea"
+    RightContentArea.Size = UDim2.new(1, -122, 1, -12)
+    RightContentArea.Position = UDim2.new(0, 114, 0, 6)
+    RightContentArea.BackgroundTransparency = 1
+    RightContentArea.ClipsDescendants = true
+    RightContentArea.Parent = HubWindow.Content
+
+    -- Sub-Header Bar (Inside Right Tab Content Area)
+    local SubHeader = Instance.new("Frame")
+    SubHeader.Size = UDim2.new(1, 0, 0, 24)
+    SubHeader.Position = UDim2.new(0, 0, 0, 0)
+    SubHeader.BackgroundTransparency = 1
+    SubHeader.Parent = RightContentArea
+
+    -- Left Inside-Tab Title Tag (Scales with text width, NO 'T A B')
     local TabTag = Instance.new("Frame")
-    TabTag.Size = UDim2.new(0, 90, 1, 0)
+    TabTag.Size = UDim2.new(0, 75, 1, 0)
     TabTag.BackgroundColor3 = themeManager.Get("Surface")
     TabTag.BackgroundTransparency = 0.3
     TabTag.BorderSizePixel = 0
@@ -70,13 +118,13 @@ function MainMenu.new(
     TabTagLabel.Size = UDim2.new(1, 0, 1, 0)
     TabTagLabel.BackgroundTransparency = 1
     TabTagLabel.Font = Enum.Font.Code
-    TabTagLabel.Text = "MAIN"
+    TabTagLabel.Text = "Main"
     TabTagLabel.TextColor3 = themeManager.Get("Accent")
     TabTagLabel.TextSize = 11
     TabTagLabel.Parent = TabTag
     themeManager.RegisterBinding(TabTagLabel, "TextColor3", "Accent")
 
-    -- Right Edge: Keybinds & Settings Buttons
+    -- Right Edge Inside-Tab Action Buttons: [Adapt] [Settings]
     local SubHeaderRight = Instance.new("Frame")
     SubHeaderRight.Size = UDim2.new(0, 160, 1, 0)
     SubHeaderRight.Position = UDim2.new(1, -160, 0, 0)
@@ -112,53 +160,101 @@ function MainMenu.new(
         b.MouseButton1Click:Connect(onClick)
     end
 
-    -- 3. Left Navigation Rail (Strictly Squared)
-    local NavRail = Instance.new("Frame")
-    NavRail.Name = "NavRail"
-    NavRail.Size = UDim2.new(0, 115, 1, -38)
-    NavRail.Position = UDim2.new(0, 8, 0, 36)
-    NavRail.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
-    NavRail.BackgroundTransparency = 0.25
-    NavRail.BorderSizePixel = 0
-    NavRail.Parent = HubWindow.Content
-
-    local NavRailStroke = Instance.new("UIStroke")
-    NavRailStroke.Thickness = 1
-    NavRailStroke.Color = themeManager.Get("Border")
-    NavRailStroke.Transparency = 0.4
-    NavRailStroke.Parent = NavRail
-
-    local NavTopList = Instance.new("Frame")
-    NavTopList.Size = UDim2.new(1, 0, 1, -36)
-    NavTopList.BackgroundTransparency = 1
-    NavTopList.Parent = NavRail
-
-    local NavLayout = Instance.new("UIListLayout")
-    NavLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    NavLayout.Padding = UDim.new(0, 4)
-    NavLayout.Parent = NavTopList
-
-    local NavPad = Instance.new("UIPadding")
-    NavPad.PaddingTop = UDim.new(0, 6)
-    NavPad.PaddingLeft = UDim.new(0, 6)
-    NavPad.PaddingRight = UDim.new(0, 6)
-    NavPad.Parent = NavTopList
-
-    -- Pinned Bottom Themes Section
-    local NavBottomSection = Instance.new("Frame")
-    NavBottomSection.Size = UDim2.new(1, -12, 0, 26)
-    NavBottomSection.Position = UDim2.new(0, 6, 1, -30)
-    NavBottomSection.BackgroundTransparency = 1
-    NavBottomSection.Parent = NavRail
-
-    -- 4. Content Area & Tab Container
+    -- Tab Container Frame (Positioned Below SubHeader)
     local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(1, -135, 1, -38)
-    TabContainer.Position = UDim2.new(0, 127, 0, 36)
+    TabContainer.Size = UDim2.new(1, 0, 1, -30)
+    TabContainer.Position = UDim2.new(0, 0, 0, 30)
     TabContainer.BackgroundTransparency = 1
-    TabContainer.Parent = HubWindow.Content
+    TabContainer.ClipsDescendants = true
+    TabContainer.Parent = RightContentArea
 
+    -- 4. Tab-Contained Slide Drawer (Slides from Top of Tab to Bottom of Tab)
+    local DrawerOverlay = Instance.new("Frame")
+    DrawerOverlay.Name = "DrawerOverlay"
+    DrawerOverlay.Size = UDim2.new(1, 0, 1, 0)
+    DrawerOverlay.Position = UDim2.new(0, 0, -1, 0)
+    DrawerOverlay.BackgroundColor3 = themeManager.Get("BackgroundPrimary")
+    DrawerOverlay.BackgroundTransparency = 0.05
+    DrawerOverlay.BorderSizePixel = 0
+    DrawerOverlay.ZIndex = 50
+    DrawerOverlay.Visible = false
+    DrawerOverlay.Parent = TabContainer
+
+    local DrawerStroke = Instance.new("UIStroke")
+    DrawerStroke.Thickness = 1
+    DrawerStroke.Color = themeManager.Get("Accent")
+    DrawerStroke.Parent = DrawerOverlay
+
+    local DrawerHeader = Instance.new("Frame")
+    DrawerHeader.Size = UDim2.new(1, 0, 0, 26)
+    DrawerHeader.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
+    DrawerHeader.BorderSizePixel = 0
+    DrawerHeader.ZIndex = 51
+    DrawerHeader.Parent = DrawerOverlay
+
+    local DrawerTitle = Instance.new("TextLabel")
+    DrawerTitle.Size = UDim2.new(1, -40, 1, 0)
+    DrawerTitle.Position = UDim2.new(0, 8, 0, 0)
+    DrawerTitle.BackgroundTransparency = 1
+    DrawerTitle.Font = Enum.Font.Code
+    DrawerTitle.Text = "SETTINGS"
+    DrawerTitle.TextColor3 = themeManager.Get("Accent")
+    DrawerTitle.TextSize = 11
+    DrawerTitle.TextXAlignment = Enum.TextXAlignment.Left
+    DrawerTitle.ZIndex = 52
+    DrawerTitle.Parent = DrawerHeader
+
+    local DrawerClose = Instance.new("TextButton")
+    DrawerClose.Size = UDim2.new(0, 22, 0, 20)
+    DrawerClose.Position = UDim2.new(1, -26, 0.5, -10)
+    DrawerClose.BackgroundColor3 = themeManager.Get("Surface")
+    DrawerClose.BorderSizePixel = 0
+    DrawerClose.Font = Enum.Font.Code
+    DrawerClose.Text = "✕"
+    DrawerClose.TextColor3 = Color3.new(1, 1, 1)
+    DrawerClose.TextSize = 11
+    DrawerClose.ZIndex = 53
+    DrawerClose.Parent = DrawerHeader
+
+    local DrawerScroll = Instance.new("ScrollingFrame")
+    DrawerScroll.Size = UDim2.new(1, -12, 1, -32)
+    DrawerScroll.Position = UDim2.new(0, 6, 0, 28)
+    DrawerScroll.BackgroundTransparency = 1
+    DrawerScroll.BorderSizePixel = 0
+    DrawerScroll.ScrollBarThickness = 3
+    DrawerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    DrawerScroll.ZIndex = 51
+    DrawerScroll.Parent = DrawerOverlay
+
+    local DrawerLayout = Instance.new("UIListLayout")
+    DrawerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    DrawerLayout.Padding = UDim.new(0, 6)
+    DrawerLayout.Parent = DrawerScroll
+
+    local function ToggleDrawer(title: string, buildFn: (Instance) -> ())
+        DrawerTitle.Text = string.upper(title)
+        for _, ch in ipairs(DrawerScroll:GetChildren()) do
+            if ch:IsA("GuiObject") then ch:Destroy() end
+        end
+        buildFn(DrawerScroll)
+
+        DrawerOverlay.Visible = true
+        DrawerOverlay.Position = UDim2.new(0, 0, -1, 0)
+        TweenService:Create(DrawerOverlay, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+    end
+
+    DrawerClose.MouseButton1Click:Connect(function()
+        local tw = TweenService:Create(DrawerOverlay, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(0, 0, -1, 0)
+        })
+        tw:Play()
+        tw.Completed:Connect(function() DrawerOverlay.Visible = false end)
+    end)
+
+    -- Tab Pages Builder
     local TabPages = {}
     local TabButtons = {}
     local CurrentActiveTab = ""
@@ -171,10 +267,45 @@ function MainMenu.new(
         Page.Visible = false
         Page.Parent = TabContainer
 
+        -- Hero Banner Header in Tab
+        local HeroBanner = Instance.new("Frame")
+        HeroBanner.Name = "HeroBanner"
+        HeroBanner.Size = UDim2.new(1, 0, 0, 46)
+        HeroBanner.BackgroundColor3 = themeManager.Get("Surface")
+        HeroBanner.BackgroundTransparency = 0.4
+        HeroBanner.BorderSizePixel = 0
+        HeroBanner.Parent = Page
+
+        local HeroStroke = Instance.new("UIStroke")
+        HeroStroke.Thickness = 1
+        HeroStroke.Color = themeManager.Get("Border")
+        HeroStroke.Parent = HeroBanner
+
+        local HeroTitle = Instance.new("TextLabel")
+        HeroTitle.Size = UDim2.new(1, 0, 0, 24)
+        HeroTitle.Position = UDim2.new(0, 0, 0, 2)
+        HeroTitle.BackgroundTransparency = 1
+        HeroTitle.Font = Enum.Font.Code
+        HeroTitle.Text = "Fih Ui"
+        HeroTitle.TextColor3 = themeManager.Get("TextPrimary")
+        HeroTitle.TextSize = 14
+        HeroTitle.Parent = HeroBanner
+
+        local HeroSub = Instance.new("TextLabel")
+        HeroSub.Size = UDim2.new(1, 0, 0, 16)
+        HeroSub.Position = UDim2.new(0, 0, 0, 24)
+        HeroSub.BackgroundTransparency = 1
+        HeroSub.Font = Enum.Font.Code
+        HeroSub.Text = "Windows XP / 207 Modular Engine | T to Toggle"
+        HeroSub.TextColor3 = themeManager.Get("TextSecondary")
+        HeroSub.TextSize = 9
+        HeroSub.Parent = HeroBanner
+
+        -- 2 Columns below Banner
         local LeftCol = Instance.new("ScrollingFrame")
         LeftCol.Name = "LeftCol"
-        LeftCol.Size = UDim2.new(0.5, -6, 1, 0)
-        LeftCol.Position = UDim2.new(0, 0, 0, 0)
+        LeftCol.Size = UDim2.new(0.5, -4, 1, -52)
+        LeftCol.Position = UDim2.new(0, 0, 0, 50)
         LeftCol.BackgroundTransparency = 1
         LeftCol.BorderSizePixel = 0
         LeftCol.ScrollBarThickness = 3
@@ -190,8 +321,8 @@ function MainMenu.new(
 
         local RightCol = Instance.new("ScrollingFrame")
         RightCol.Name = "RightCol"
-        RightCol.Size = UDim2.new(0.5, -6, 1, 0)
-        RightCol.Position = UDim2.new(0.5, 4, 0, 0)
+        RightCol.Size = UDim2.new(0.5, -4, 1, -52)
+        RightCol.Position = UDim2.new(0.5, 4, 0, 50)
         RightCol.BackgroundTransparency = 1
         RightCol.BorderSizePixel = 0
         RightCol.ScrollBarThickness = 3
@@ -227,15 +358,10 @@ function MainMenu.new(
         local oldPage = TabPages[CurrentActiveTab]
         local newPage = TabPages[tabName]
 
-        if oldPage then
-            oldPage.Page.Visible = false
-        end
+        if oldPage then oldPage.Page.Visible = false end
+        if newPage then newPage.Page.Visible = true end
 
-        if newPage then
-            newPage.Page.Visible = true
-        end
-
-        TabTagLabel.Text = string.upper(tabName)
+        TabTagLabel.Text = tabName
         CurrentActiveTab = tabName
     end
 
@@ -243,7 +369,7 @@ function MainMenu.new(
         local parent = isBottomPinned and NavBottomSection or NavTopList
         local btn = Instance.new("TextButton")
         btn.Name = "Nav_" .. name
-        btn.Size = UDim2.new(1, 0, 0, 24)
+        btn.Size = UDim2.new(1, 0, 0, 22)
         btn.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
         btn.BackgroundTransparency = 0.4
         btn.BorderSizePixel = 0
@@ -284,9 +410,8 @@ function MainMenu.new(
         stroke.Transparency = 0.4
         stroke.Parent = card
 
-        -- Card Header Box
         local header = Instance.new("Frame")
-        header.Size = UDim2.new(1, 0, 0, 22)
+        header.Size = UDim2.new(1, 0, 0, 20)
         header.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
         header.BackgroundTransparency = 0.3
         header.BorderSizePixel = 0
@@ -299,14 +424,14 @@ function MainMenu.new(
         titleLbl.Font = Enum.Font.Code
         titleLbl.Text = string.upper(cardTitle)
         titleLbl.TextColor3 = themeManager.Get("Accent")
-        titleLbl.TextSize = 10
+        titleLbl.TextSize = 9
         titleLbl.TextXAlignment = Enum.TextXAlignment.Left
         titleLbl.Parent = header
         themeManager.RegisterBinding(titleLbl, "TextColor3", "Accent")
 
         local itemContainer = Instance.new("Frame")
-        itemContainer.Size = UDim2.new(1, -12, 0, 0)
-        itemContainer.Position = UDim2.new(0, 6, 0, 26)
+        itemContainer.Size = UDim2.new(1, -10, 0, 0)
+        itemContainer.Position = UDim2.new(0, 5, 0, 24)
         itemContainer.AutomaticSize = Enum.AutomaticSize.Y
         itemContainer.BackgroundTransparency = 1
         itemContainer.Parent = card
@@ -326,7 +451,7 @@ function MainMenu.new(
     local function AddToggle(cardContainer: Instance, labelText: string, default: boolean, callback: (boolean) -> ())
         local state = default
         local row = Instance.new("TextButton")
-        row.Size = UDim2.new(1, 0, 0, 22)
+        row.Size = UDim2.new(1, 0, 0, 20)
         row.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
         row.BackgroundTransparency = 0.4
         row.BorderSizePixel = 0
@@ -341,19 +466,19 @@ function MainMenu.new(
         stroke.Parent = row
 
         local title = Instance.new("TextLabel")
-        title.Size = UDim2.new(1, -30, 1, 0)
+        title.Size = UDim2.new(1, -26, 1, 0)
         title.Position = UDim2.new(0, 6, 0, 0)
         title.BackgroundTransparency = 1
         title.Font = Enum.Font.Code
         title.Text = labelText
         title.TextColor3 = themeManager.Get("TextPrimary")
-        title.TextSize = 10
+        title.TextSize = 9
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.Parent = row
 
         local box = Instance.new("Frame")
-        box.Size = UDim2.new(0, 14, 0, 14)
-        box.Position = UDim2.new(1, -18, 0.5, -7)
+        box.Size = UDim2.new(0, 12, 0, 12)
+        box.Position = UDim2.new(1, -16, 0.5, -6)
         box.BackgroundColor3 = state and themeManager.Get("Accent") or themeManager.Get("Surface")
         box.BackgroundTransparency = state and 0 or 0.3
         box.BorderSizePixel = 0
@@ -370,7 +495,7 @@ function MainMenu.new(
         checkMark.Font = Enum.Font.Code
         checkMark.Text = state and "✓" or ""
         checkMark.TextColor3 = Color3.new(1, 1, 1)
-        checkMark.TextSize = 10
+        checkMark.TextSize = 9
         checkMark.Parent = box
 
         row.MouseButton1Click:Connect(function()
@@ -385,7 +510,7 @@ function MainMenu.new(
     local function AddSlider(cardContainer: Instance, labelText: string, min: number, max: number, default: number, callback: (number) -> ())
         local currentVal = default
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(1, 0, 0, 32)
+        frame.Size = UDim2.new(1, 0, 0, 28)
         frame.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
         frame.BackgroundTransparency = 0.4
         frame.BorderSizePixel = 0
@@ -398,29 +523,30 @@ function MainMenu.new(
         stroke.Parent = frame
 
         local title = Instance.new("TextLabel")
-        title.Size = UDim2.new(1, -40, 0, 14)
+        title.Size = UDim2.new(1, -36, 0, 12)
         title.Position = UDim2.new(0, 6, 0, 2)
         title.BackgroundTransparency = 1
         title.Font = Enum.Font.Code
         title.Text = labelText
         title.TextColor3 = themeManager.Get("TextPrimary")
-        title.TextSize = 9
+        title.TextSize = 8
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.Parent = frame
 
         local valLbl = Instance.new("TextLabel")
-        valLbl.Size = UDim2.new(0, 34, 0, 14)
-        valLbl.Position = UDim2.new(1, -38, 0, 2)
+        valLbl.Size = UDim2.new(0, 30, 0, 12)
+        valLbl.Position = UDim2.new(1, -34, 0, 2)
         valLbl.BackgroundTransparency = 1
         valLbl.Font = Enum.Font.Code
         valLbl.Text = tostring(default)
-        valLbl.TextColor3 = themeManager.Get("TextSecondary")
-        valLbl.TextSize = 9
+        valLbl.TextColor3 = themeManager.Get("Accent")
+        valLbl.TextSize = 8
         valLbl.Parent = frame
+        themeManager.RegisterBinding(valLbl, "TextColor3", "Accent")
 
         local barBack = Instance.new("TextButton")
-        barBack.Size = UDim2.new(1, -12, 0, 8)
-        barBack.Position = UDim2.new(0, 6, 0, 18)
+        barBack.Size = UDim2.new(1, -12, 0, 6)
+        barBack.Position = UDim2.new(0, 6, 0, 16)
         barBack.BackgroundColor3 = themeManager.Get("Surface")
         barBack.BackgroundTransparency = 0.3
         barBack.BorderSizePixel = 0
@@ -465,14 +591,14 @@ function MainMenu.new(
 
     local function AddButton(cardContainer: Instance, labelText: string, onClick: () -> ())
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 24)
+        btn.Size = UDim2.new(1, 0, 0, 22)
         btn.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
         btn.BackgroundTransparency = 0.3
         btn.BorderSizePixel = 0
         btn.Font = Enum.Font.Code
         btn.Text = labelText
         btn.TextColor3 = themeManager.Get("TextPrimary")
-        btn.TextSize = 10
+        btn.TextSize = 9
         btn.Parent = cardContainer
 
         local s = Instance.new("UIStroke")
@@ -485,175 +611,116 @@ function MainMenu.new(
         btn.MouseButton1Click:Connect(onClick)
     end
 
-    -- 5. Animated Top-To-Bottom Slide Drawers for Settings & Keybinds
-    local DrawerOverlay = Instance.new("Frame")
-    DrawerOverlay.Name = "DrawerOverlay"
-    DrawerOverlay.Size = UDim2.new(1, 0, 1, -26)
-    DrawerOverlay.Position = UDim2.new(0, 0, 0, -500)
-    DrawerOverlay.BackgroundColor3 = themeManager.Get("BackgroundPrimary")
-    DrawerOverlay.BackgroundTransparency = 0.08
-    DrawerOverlay.BorderSizePixel = 0
-    DrawerOverlay.ZIndex = 50
-    DrawerOverlay.Visible = false
-    DrawerOverlay.Parent = HubWindow.Frame
-
-    local DrawerStroke = Instance.new("UIStroke")
-    DrawerStroke.Thickness = 1
-    DrawerStroke.Color = themeManager.Get("Accent")
-    DrawerStroke.Parent = DrawerOverlay
-
-    local DrawerTitle = Instance.new("TextLabel")
-    DrawerTitle.Size = UDim2.new(1, -40, 0, 28)
-    DrawerTitle.Position = UDim2.new(0, 12, 0, 6)
-    DrawerTitle.BackgroundTransparency = 1
-    DrawerTitle.Font = Enum.Font.Code
-    DrawerTitle.Text = "SETTINGS & PREFERENCES"
-    DrawerTitle.TextColor3 = themeManager.Get("Accent")
-    DrawerTitle.TextSize = 12
-    DrawerTitle.TextXAlignment = Enum.TextXAlignment.Left
-    DrawerTitle.ZIndex = 51
-    DrawerTitle.Parent = DrawerOverlay
-
-    local DrawerClose = Instance.new("TextButton")
-    DrawerClose.Size = UDim2.new(0, 24, 0, 22)
-    DrawerClose.Position = UDim2.new(1, -32, 0, 6)
-    DrawerClose.BackgroundColor3 = themeManager.Get("Surface")
-    DrawerClose.BorderSizePixel = 0
-    DrawerClose.Font = Enum.Font.Code
-    DrawerClose.Text = "✕"
-    DrawerClose.TextColor3 = Color3.new(1, 1, 1)
-    DrawerClose.TextSize = 11
-    DrawerClose.ZIndex = 52
-    DrawerClose.Parent = DrawerOverlay
-
-    local DrawerScroll = Instance.new("ScrollingFrame")
-    DrawerScroll.Size = UDim2.new(1, -24, 1, -44)
-    DrawerScroll.Position = UDim2.new(0, 12, 0, 38)
-    DrawerScroll.BackgroundTransparency = 1
-    DrawerScroll.BorderSizePixel = 0
-    DrawerScroll.ScrollBarThickness = 3
-    DrawerScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    DrawerScroll.ZIndex = 51
-    DrawerScroll.Parent = DrawerOverlay
-
-    local DrawerLayout = Instance.new("UIListLayout")
-    DrawerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    DrawerLayout.Padding = UDim.new(0, 6)
-    DrawerLayout.Parent = DrawerScroll
-
-    local function ToggleDrawer(title: string, buildFn: (Instance) -> ())
-        DrawerTitle.Text = string.upper(title)
-        for _, ch in ipairs(DrawerScroll:GetChildren()) do
-            if ch:IsA("GuiObject") then ch:Destroy() end
-        end
-        buildFn(DrawerScroll)
-
-        DrawerOverlay.Visible = true
-        DrawerOverlay.Position = UDim2.new(0, 0, 0, -420)
-        TweenService:Create(DrawerOverlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 26)
-        }):Play()
-    end
-
-    DrawerClose.MouseButton1Click:Connect(function()
-        local tw = TweenService:Create(DrawerOverlay, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Position = UDim2.new(0, 0, 0, -420)
-        })
-        tw:Play()
-        tw.Completed:Connect(function() DrawerOverlay.Visible = false end)
-    end)
-
-    CreateSubBtn("Keybinds", function()
-        ToggleDrawer("GLOBAL KEYBINDS", function(parent)
-            local card = CreateCard(parent, "Active Hotkeys")
+    -- Hook Up Top Sub-Header Actions
+    CreateSubBtn("Adapt", function()
+        ToggleDrawer("DYNAMIC ADAPTIVE THEME", function(parent)
+            local card = CreateCard(parent, "Adaptive Settings")
             card.Parent.ZIndex = 53
-            AddButton(card, "Toggle Main GUI: RightControl", function() end)
-            AddButton(card, "Toggle Flight: F", function() end)
-            AddButton(card, "Toggle Noclip: N", function() end)
+            AddToggle(card, "Album Art Color Interpolation", true, function(s) end)
+            AddToggle(card, "Audio Reactive Glow", true, function(s) end)
         end)
     end)
 
     CreateSubBtn("Settings", function()
-        ToggleDrawer("GLOBAL CONFIGURATION", function(parent)
-            local card = CreateCard(parent, "Core Options")
+        ToggleDrawer("GLOBAL SETTINGS & KEYBINDS", function(parent)
+            local card = CreateCard(parent, "Keybinds & Controls")
             card.Parent.ZIndex = 53
-            AddToggle(card, "Translucent Glass Effects", true, function(s) end)
-            AddToggle(card, "Hardware Acceleration", true, function(s) end)
-            AddToggle(card, "Auto-Save Settings", true, function(s) end)
+            AddButton(card, "Toggle GUI : RightControl / T", function() end)
+            AddButton(card, "Fly Mode : F", function() end)
+            AddButton(card, "Noclip : N", function() end)
+
+            local c2 = CreateCard(parent, "Rendering & Modules")
+            c2.Parent.ZIndex = 53
+            AddToggle(c2, "Translucent Glassmorphism", true, function(s) end)
+            AddToggle(c2, "Hardware Acceleration", true, function(s) end)
         end)
     end)
 
-    -- Register Navigation Tabs
-    local NavItems = { "MAIN", "PLAYER", "TARGETS", "VISUALS", "MUSIC", "SCRIPTS" }
+    -- Register All Navigation Tabs (Main, Esp, Music, Troll, Keybinds, Themes)
+    local NavItems = { "Main", "Esp", "Music", "Troll", "Scripts" }
     for _, nav in ipairs(NavItems) do
         RegisterNavTab(nav)
     end
-    RegisterNavTab("THEMES", true)
+    RegisterNavTab("Themes", true)
 
     ----------------------------------------------------------------------------
-    -- TAB 1: MAIN
+    -- TAB 1: MAIN (Matching screenshot Movement & Physics, Stat Modifications, World)
     ----------------------------------------------------------------------------
-    local mLeft = CreateCard(TabPages["MAIN"].Left, "System Hub")
-    AddToggle(mLeft, "Metatable Guard Hook", true, function(s) end)
-    AddToggle(mLeft, "Event Streamer Active", true, function(s) end)
-    AddToggle(mLeft, "Anti-Afk KeepAlive", true, function(s)
-        pcall(function()
-            LocalPlayer.Idled:Connect(function()
-                game:GetService("VirtualUser"):Button2Down(Vector2.zero, Workspace.CurrentCamera.CFrame)
-                task.wait(1)
-                game:GetService("VirtualUser"):Button2Up(Vector2.zero, Workspace.CurrentCamera.CFrame)
-            end)
-        end)
+    local mMove = CreateCard(TabPages["Main"].Left, "[Movement & Physics]")
+    AddToggle(mMove, "Infinite Jump", false, function(s) charMod.SetInfiniteJump(s) end)
+    AddToggle(mMove, "Flight", false, function(s) flightMod.Toggle(s) end)
+    AddSlider(mMove, "Flight Speed", 16, 250, 55, function(v) flightMod.SetSpeed(v) end)
+    AddToggle(mMove, "Noclip", false, function(s) charMod.SetNoclip(s) end)
+    AddToggle(mMove, "Click TP (Ctrl + Click)", false, function(s) end)
+    AddToggle(mMove, "Anti Ragdoll", false, function(s) end)
+    AddToggle(mMove, "Fragile Player (Glass Mode)", false, function(s) end)
+    AddSlider(mMove, "Fragile Knockback Force", 0, 100, 50, function(v) end)
+    AddButton(mMove, "[ Force Respawn ]", function()
+        if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
     end)
 
-    local mRight = CreateCard(TabPages["MAIN"].Right, "Modular Windows")
-    AddToggle(mRight, "Chat Overlay", true, function(s) if windows.Chat then windows.Chat.Frame.Visible = s end end)
-    AddToggle(mRight, "Player List Overlay", true, function(s) if windows.PlayerList then windows.PlayerList.Frame.Visible = s end end)
-    AddToggle(mRight, "Music Widget", true, function(s) if windows.Music then windows.Music.Frame.Visible = s end end)
+    local mStats = CreateCard(TabPages["Main"].Right, "[Stat Modifications]")
+    AddToggle(mStats, "Enable Custom Walk Speed", false, function(s) end)
+    AddSlider(mStats, "Walk Speed", 16, 250, 16, function(v) charMod.SetWalkSpeed(v) end)
+    AddToggle(mStats, "Enable Custom Jump", false, function(s) end)
+    AddSlider(mStats, "Jump Height / Power", 50, 350, 50, function(v) charMod.SetJumpPower(v) end)
 
-    local mServer = CreateCard(TabPages["MAIN"].Left, "Server Status")
-    AddButton(mServer, "Rejoin Server", function() game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer) end)
-    AddButton(mServer, "Server Hop", function()
-        pcall(function()
-            local sf = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=10"))
-            if sf and sf.data and #sf.data > 1 then
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, sf.data[2].id, LocalPlayer)
-            end
-        end)
+    local mWorld = CreateCard(TabPages["Main"].Right, "[World Modifiers]")
+    AddSlider(mWorld, "Gravity", 0, 400, 196, function(v) charMod.SetGravity(v) end)
+    AddSlider(mWorld, "Reach Extender", 0, 50, 0, function(v) end)
+    AddToggle(mWorld, "Anti-Aim (Spin BOT)", false, function(s) charMod.SetSpinbot(s) end)
+
+    local mCam = CreateCard(TabPages["Main"].Right, "[Camera & Fov]")
+    AddSlider(mCam, "Fov", 60, 120, 70, function(v) visualsMod.SetFOV(v) end)
+    AddToggle(mCam, "Full Bright", false, function(s) visualsMod.SetFullbright(s) end)
+
+    ----------------------------------------------------------------------------
+    -- TAB 2: ESP (Visuals)
+    ----------------------------------------------------------------------------
+    local eLeft = CreateCard(TabPages["Esp"].Left, "[Player ESP]")
+    AddToggle(eLeft, "2D Box ESP", false, function(s) visualsMod.SetBoxESP(s) end)
+    AddToggle(eLeft, "Name & Distance Tags", false, function(s) visualsMod.SetNameESP(s) end)
+    AddToggle(eLeft, "Chams Highlights", false, function(s) visualsMod.SetHighlights(s) end)
+
+    local eRight = CreateCard(TabPages["Esp"].Right, "[ESP Configuration]")
+    AddToggle(eRight, "Team Check", true, function(s) end)
+    AddToggle(eRight, "Health Bar Display", true, function(s) end)
+
+    ----------------------------------------------------------------------------
+    -- TAB 3: MUSIC
+    ----------------------------------------------------------------------------
+    local muLeft = CreateCard(TabPages["Music"].Left, "[Sound Engine Controls]")
+    AddToggle(muLeft, "Sound Stream Enabled", false, function(s)
+        if s then musicEngine.PlaySound(9048375035, "Lo-Fi Beats 1") else musicEngine.Pause() end
     end)
+    AddSlider(muLeft, "Stream Volume", 0, 10, 1, function(v) musicEngine.SetVolume(v) end)
+    AddSlider(muLeft, "Stream Pitch", 0, 2, 1, function(v) musicEngine.SetPitch(v) end)
+
+    local muPresets = CreateCard(TabPages["Music"].Left, "[Audio Presets]")
+    for _, p in ipairs(musicEngine.Presets) do
+        AddButton(muPresets, p.Name, function()
+            musicEngine.PlaySound(p.Id, p.Name)
+            TopSongBanner.Text = "♪ Song: " .. p.Name .. " // Media Status: Playing"
+        end)
+    end
+
+    local muRight = CreateCard(TabPages["Music"].Right, "[Visualizer Modes]")
+    AddToggle(muRight, "Spectrum HUD Overlay", true, function(s) if windows.Music then windows.Music.Frame.Visible = s end end)
 
     ----------------------------------------------------------------------------
-    -- TAB 2: PLAYER
+    -- TAB 4: TROLL (Targets & Fling)
     ----------------------------------------------------------------------------
-    local pLeft = CreateCard(TabPages["PLAYER"].Left, "Locomotion")
-    AddToggle(pLeft, "Linear Flight", false, function(s) flightMod.Toggle(s) end)
-    AddSlider(pLeft, "Flight Speed", 16, 250, 50, function(v) flightMod.SetSpeed(v) end)
-    AddToggle(pLeft, "Stepped Floater", false, function(s) platformMod.Toggle(s, themeManager.Get("Accent")) end)
-    AddToggle(pLeft, "Noclip Stepped", false, function(s) charMod.SetNoclip(s) end)
-
-    local pRight = CreateCard(TabPages["PLAYER"].Right, "Character Modifications")
-    AddSlider(pRight, "WalkSpeed", 16, 250, 16, function(v) charMod.SetWalkSpeed(v) end)
-    AddSlider(pRight, "JumpPower", 50, 350, 50, function(v) charMod.SetJumpPower(v) end)
-    AddSlider(pRight, "Gravity", 0, 400, 196, function(v) charMod.SetGravity(v) end)
-    AddSlider(pRight, "HipHeight", 0, 30, 2, function(v) charMod.SetHipHeight(v) end)
-    AddToggle(pRight, "Infinite Jump", false, function(s) charMod.SetInfiniteJump(s) end)
-    AddToggle(pRight, "Spinbot Desync", false, function(s) charMod.SetSpinbot(s) end)
-    AddToggle(pRight, "Walk Fling (Stabilized)", false, function(s) flingMod.Toggle(s) end)
-
-    ----------------------------------------------------------------------------
-    -- TAB 3: TARGETS (With Interactive Player Dropdown)
-    ----------------------------------------------------------------------------
-    local tLeft = CreateCard(TabPages["TARGETS"].Left, "Player Selector")
+    local tLeft = CreateCard(TabPages["Troll"].Left, "[Target Selector]")
     local SelectedPlayer: Player? = nil
 
     local DropdownBtn = Instance.new("TextButton")
-    DropdownBtn.Size = UDim2.new(1, 0, 0, 26)
+    DropdownBtn.Size = UDim2.new(1, 0, 0, 24)
     DropdownBtn.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
     DropdownBtn.BorderSizePixel = 0
     DropdownBtn.Font = Enum.Font.Code
-    DropdownBtn.Text = "Select Target: [Click to Choose]"
+    DropdownBtn.Text = "Choose Target..."
     DropdownBtn.TextColor3 = themeManager.Get("TextPrimary")
-    DropdownBtn.TextSize = 10
+    DropdownBtn.TextSize = 9
     DropdownBtn.Parent = tLeft
 
     local DropStroke = Instance.new("UIStroke")
@@ -662,11 +729,11 @@ function MainMenu.new(
     DropStroke.Parent = DropdownBtn
 
     local DropList = Instance.new("Frame")
-    DropList.Size = UDim2.new(1, 0, 0, 110)
+    DropList.Size = UDim2.new(1, 0, 0, 100)
     DropList.BackgroundColor3 = themeManager.Get("BackgroundPrimary")
     DropList.BorderSizePixel = 0
     DropList.Visible = false
-    DropList.ZIndex = 25
+    DropList.ZIndex = 30
     DropList.Parent = tLeft
 
     local DropScroll = Instance.new("ScrollingFrame")
@@ -675,7 +742,7 @@ function MainMenu.new(
     DropScroll.BorderSizePixel = 0
     DropScroll.ScrollBarThickness = 2
     DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    DropScroll.ZIndex = 26
+    DropScroll.ZIndex = 31
     DropScroll.Parent = DropList
 
     local DropScrollLayout = Instance.new("UIListLayout")
@@ -690,15 +757,15 @@ function MainMenu.new(
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
                 local b = Instance.new("TextButton")
-                b.Size = UDim2.new(1, 0, 0, 22)
+                b.Size = UDim2.new(1, 0, 0, 20)
                 b.BackgroundColor3 = themeManager.Get("Surface")
                 b.BorderSizePixel = 0
                 b.Font = Enum.Font.Code
-                b.Text = " " .. plr.DisplayName .. " (@" .. plr.Name .. ")"
+                b.Text = " " .. plr.DisplayName
                 b.TextColor3 = themeManager.Get("TextPrimary")
-                b.TextSize = 10
+                b.TextSize = 9
                 b.TextXAlignment = Enum.TextXAlignment.Left
-                b.ZIndex = 27
+                b.ZIndex = 32
                 b.Parent = DropScroll
 
                 b.MouseButton1Click:Connect(function()
@@ -715,7 +782,7 @@ function MainMenu.new(
         DropList.Visible = not DropList.Visible
     end)
 
-    local tRight = CreateCard(TabPages["TARGETS"].Right, "Target Actions")
+    local tRight = CreateCard(TabPages["Troll"].Right, "[Troll Actions]")
     AddButton(tRight, "Teleport To Target", function()
         if SelectedPlayer and SelectedPlayer.Character then
             local tRoot = SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
@@ -729,51 +796,23 @@ function MainMenu.new(
             if hum then Workspace.CurrentCamera.CameraSubject = hum end
         end
     end)
-    AddButton(tRight, "Reset Spectate", function()
-        Workspace.CurrentCamera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    end)
-    AddButton(tRight, "Fling Target", function()
+    AddButton(tRight, "Fling Target (Stabilized)", function()
         if SelectedPlayer then flingMod.FlingPlayer(SelectedPlayer, 0.6) end
     end)
+    AddToggle(tRight, "Walk Fling (All Players)", false, function(s) flingMod.Toggle(s) end)
 
     ----------------------------------------------------------------------------
-    -- TAB 4: VISUALS
+    -- TAB 5: SCRIPTS
     ----------------------------------------------------------------------------
-    local vLeft = CreateCard(TabPages["VISUALS"].Left, "Player ESP")
-    AddToggle(vLeft, "Box 2D ESP", false, function(s) visualsMod.SetBoxESP(s) end)
-    AddToggle(vLeft, "Name & Distance Tags", false, function(s) visualsMod.SetNameESP(s) end)
-    AddToggle(vLeft, "Chams Highlights", false, function(s) visualsMod.SetHighlights(s) end)
-
-    local vRight = CreateCard(TabPages["VISUALS"].Right, "World & Lighting")
-    AddToggle(vRight, "Fullbright Daylight", false, function(s) visualsMod.SetFullbright(s) end)
-    AddSlider(vRight, "Camera FOV", 60, 120, 70, function(v) visualsMod.SetFOV(v) end)
-
-    ----------------------------------------------------------------------------
-    -- TAB 5: MUSIC (Fully Functional Built-in Sound Engine & Bridge)
-    ----------------------------------------------------------------------------
-    local muLeft = CreateCard(TabPages["MUSIC"].Left, "Sound Engine Controls")
-    AddToggle(muLeft, "Sound Stream Enabled", false, function(s)
-        if s then musicEngine.PlaySound(9048375035, "Lo-Fi Beats 1") else musicEngine.Pause() end
-    end)
-    AddSlider(muLeft, "Stream Volume", 0, 10, 1, function(v) musicEngine.SetVolume(v) end)
-    AddSlider(muLeft, "Stream Pitch", 0, 2, 1, function(v) musicEngine.SetPitch(v) end)
-
-    local muPresets = CreateCard(TabPages["MUSIC"].Left, "Audio Presets")
-    for _, p in ipairs(musicEngine.Presets) do
-        AddButton(muPresets, p.Name, function()
-            musicEngine.PlaySound(p.Id, p.Name)
-            TopSongBanner.Text = "♪ Song: " .. p.Name .. " // Media Status: Playing"
-        end)
-    end
-
-    local muRight = CreateCard(TabPages["MUSIC"].Right, "Visualizer & Daemon")
-    AddToggle(muRight, "Localhost Sync (9000)", false, function(s) end)
-    AddToggle(muRight, "Audio Spectrum HUD", true, function(s) if windows.Music then windows.Music.Frame.Visible = s end end)
+    local sLeft = CreateCard(TabPages["Scripts"].Left, "[Universal Hubs]")
+    AddButton(sLeft, "Infinite Yield", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
+    AddButton(sLeft, "Dex Explorer", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))() end)
+    AddButton(sLeft, "SimpleSpy v3", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/src/source.lua"))() end)
 
     ----------------------------------------------------------------------------
     -- TAB 6: THEMES
     ----------------------------------------------------------------------------
-    local thLeft = CreateCard(TabPages["THEMES"].Left, "Theme Presets")
+    local thLeft = CreateCard(TabPages["Themes"].Left, "[Theme Presets]")
     local presets = themeManager.GetPresets()
     for name, _ in pairs(presets) do
         AddButton(thLeft, name, function()
@@ -781,22 +820,8 @@ function MainMenu.new(
         end)
     end
 
-    local thRight = CreateCard(TabPages["THEMES"].Right, "Accent Modulation")
-    AddToggle(thRight, "Album Art Color Sync", false, function(s) end)
-
-    ----------------------------------------------------------------------------
-    -- TAB 7: SCRIPTS
-    ----------------------------------------------------------------------------
-    local sLeft = CreateCard(TabPages["SCRIPTS"].Left, "Universal Script Hub")
-    AddButton(sLeft, "Infinite Yield", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
-    AddButton(sLeft, "Dex Explorer", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))() end)
-    AddButton(sLeft, "SimpleSpy v3", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/src/source.lua"))() end)
-
-    local sRight = CreateCard(TabPages["SCRIPTS"].Right, "Custom Code Slot")
-    AddButton(sRight, "Execute Potassium Hooks", function() print("[Fish Menu]: Hooks injected.") end)
-
     -- Initial Tab Switch
-    SwitchTab("MAIN")
+    SwitchTab("Main")
 
     return HubWindow
 end

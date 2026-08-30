@@ -1,5 +1,5 @@
 -- Core/ThemeManager.lua
--- Translucent Glassmorphic Theme Engine with Adaptive Multi-Token Reactive Interpolation
+-- Translucent Glassmorphic Theme Engine with Adaptive Neon Styling
 
 local TweenService = game:GetService("TweenService")
 
@@ -7,38 +7,38 @@ local ThemeManager = {}
 ThemeManager.__index = ThemeManager
 
 local Tokens = {
-    BackgroundPrimary   = Color3.fromRGB(14, 14, 20),
-    BackgroundSecondary = Color3.fromRGB(20, 20, 28),
-    Surface             = Color3.fromRGB(26, 26, 36),
-    SurfaceHover        = Color3.fromRGB(38, 38, 52),
-    Border              = Color3.fromRGB(55, 55, 75),
-    BorderActive        = Color3.fromRGB(85, 170, 255),
-    TextPrimary         = Color3.fromRGB(245, 245, 250),
-    TextSecondary       = Color3.fromRGB(150, 150, 170),
-    Accent              = Color3.fromRGB(85, 170, 255),
-    AccentGlow          = Color3.fromRGB(120, 190, 255),
-    Success             = Color3.fromRGB(75, 215, 135),
-    Danger              = Color3.fromRGB(245, 70, 70),
+    BackgroundPrimary   = Color3.fromRGB(16, 10, 24),
+    BackgroundSecondary = Color3.fromRGB(24, 14, 34),
+    Surface             = Color3.fromRGB(32, 20, 46),
+    SurfaceHover        = Color3.fromRGB(48, 30, 68),
+    Border              = Color3.fromRGB(70, 40, 95),
+    BorderActive        = Color3.fromRGB(255, 60, 180),
+    TextPrimary         = Color3.fromRGB(250, 245, 255),
+    TextSecondary       = Color3.fromRGB(170, 150, 190),
+    Accent              = Color3.fromRGB(255, 60, 180),
+    AccentGlow          = Color3.fromRGB(255, 120, 210),
+    Success             = Color3.fromRGB(80, 225, 140),
+    Danger              = Color3.fromRGB(255, 65, 85),
 }
 
 local Transparencies = {
     BackgroundPrimary   = 0.12,
     BackgroundSecondary = 0.18,
-    Surface             = 0.28,
-    SurfaceHover        = 0.18,
+    Surface             = 0.25,
+    SurfaceHover        = 0.15,
     Border              = 0.35,
     BorderActive        = 0.00,
 }
 
 local Presets = {
+    ["Cyberpunk Neon"]   = Color3.fromRGB(255, 60, 180),
     ["Dark Cubed"]       = Color3.fromRGB(85, 170, 255),
-    ["Cyberpunk Neon"]   = Color3.fromRGB(255, 0, 135),
     ["Acid Matrix"]      = Color3.fromRGB(0, 255, 130),
     ["Amber Sunset"]     = Color3.fromRGB(255, 160, 45),
     ["Monochrome Slate"] = Color3.fromRGB(190, 190, 205),
     ["Crimson Red"]      = Color3.fromRGB(255, 55, 75),
     ["Sakura Pink"]      = Color3.fromRGB(255, 135, 190),
-    ["Deep Indigo"]      = Color3.fromRGB(130, 90, 255),
+    ["Deep Indigo"]      = Color3.fromRGB(140, 80, 255),
 }
 
 local Bindings = {}
