@@ -1,5 +1,5 @@
 -- Fih_Menu.lua
--- Complete Fih Menu Suite with Global Reactive Theming & Interactive Music Controller
+-- Complete Fih Menu Suite: Player Context Menu Popup, Troll Target Dropdown & Arrow Cycler, Reactive Theming, Interactive Audio Engine
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -17,7 +17,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local Camera = Workspace.CurrentCamera
 
--- Safe GUI Container
+-- Safe GUI container
 local TargetParent: Instance = CoreGui
 pcall(function()
     local test = Instance.new("Folder")
@@ -41,7 +41,7 @@ ScreenHost.DisplayOrder = 100
 ScreenHost.Parent = TargetParent
 
 --------------------------------------------------------------------------------
--- 1. GLOBAL THEME ENGINE (Reactive Multi-Element Recoloring)
+-- 1. GLOBAL THEME ENGINE
 --------------------------------------------------------------------------------
 local Tokens = {
     BackgroundPrimary   = Color3.fromRGB(18, 12, 26),
@@ -106,77 +106,7 @@ local function ApplyTheme(col: Color3)
 end
 
 --------------------------------------------------------------------------------
--- 2. AUDIO STREAM & INTERACTIVE PLAYLIST ENGINE
---------------------------------------------------------------------------------
-local AudioStream = Instance.new("Sound")
-AudioStream.Name = "FihMenu_AudioStream"
-AudioStream.Looped = true
-AudioStream.Volume = 1.0
-AudioStream.PlaybackSpeed = 1.0
-AudioStream.Parent = SoundService
-
-local Playlist = {
-    { Title = "Lo-Fi Study Beats", Artist = "Universal Audio [Local]", Id = 9048375035, Cover = "rbxassetid://10849911991", Lyric = "Chill lo-fi study rhythm flowing..." },
-    { Title = "Synthwave Neon Sunset", Artist = "Retro Wave [Spotify]", Id = 9043887091, Cover = "rbxassetid://10849911991", Lyric = "Cruising down the digital highway at night" },
-    { Title = "Chill Ambient Rain", Artist = "Atmospheric Study [Local]", Id = 1837849285, Cover = "rbxassetid://10849911991", Lyric = "Gentle rain tapping against the glass pane" },
-    { Title = "Cyber Arcade 8-Bit", Artist = "Pixel Beats [Chiptune]", Id = 1845499092, Cover = "rbxassetid://10849911991", Lyric = "Insert coin to continue stage 01" },
-}
-
-local CurrentTrackIndex = 0
-local IsAudioPlaying = false
-local SpeedCycle = { 1.0, 1.25, 1.5, 2.0, 0.5 }
-local CurrentSpeedIndex = 1
-
-local OnTrackUpdated = Instance.new("BindableEvent")
-
-local function PlayTrackByIndex(idx: number)
-    if idx < 1 then idx = #Playlist end
-    if idx > #Playlist then idx = 1 end
-    CurrentTrackIndex = idx
-    local track = Playlist[idx]
-
-    AudioStream.SoundId = "rbxassetid://" .. tostring(track.Id)
-    AudioStream:Play()
-    IsAudioPlaying = true
-    OnTrackUpdated:Fire(track, true)
-end
-
-local function TogglePlayPause()
-    if CurrentTrackIndex == 0 then
-        PlayTrackByIndex(1)
-        return
-    end
-
-    if IsAudioPlaying then
-        AudioStream:Pause()
-        IsAudioPlaying = false
-        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], false)
-    else
-        AudioStream:Resume()
-        IsAudioPlaying = true
-        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], true)
-    end
-end
-
-local function NextTrack()
-    PlayTrackByIndex(CurrentTrackIndex == 0 and 1 or (CurrentTrackIndex + 1))
-end
-
-local function PrevTrack()
-    PlayTrackByIndex(CurrentTrackIndex == 0 and 1 or (CurrentTrackIndex - 1))
-end
-
-local function CycleSpeed()
-    CurrentSpeedIndex = (CurrentSpeedIndex % #SpeedCycle) + 1
-    local speed = SpeedCycle[CurrentSpeedIndex]
-    AudioStream.PlaybackSpeed = speed
-    if CurrentTrackIndex > 0 then
-        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], IsAudioPlaying)
-    end
-end
-
---------------------------------------------------------------------------------
--- 3. BACKEND CHEAT ENGINE
+-- 2. BACKEND CHEAT ENGINE
 --------------------------------------------------------------------------------
 local State = {
     InfiniteJump = false,
@@ -184,10 +114,13 @@ local State = {
     FlySpeed = 55,
     Noclip = false,
     ClickTP = false,
+    AntiRagdoll = false,
     Floater = false,
     FloatY = 0,
     Spinbot = false,
     WalkFling = false,
+    OrbitTarget = false,
+    AttachTarget = false,
     BoxESP = false,
     NameESP = false,
     Highlights = false,
@@ -234,7 +167,8 @@ RunService.Stepped:Connect(function()
     end
 end)
 
-RunService.PostSimulation:Connect(function()
+local OrbitAngle = 0
+RunService.PostSimulation:Connect(function(dt)
     local root = GetRoot()
     local hum = GetHumanoid()
     if root and hum then
@@ -244,6 +178,20 @@ RunService.PostSimulation:Connect(function()
         if State.WalkFling then
             root.AssemblyAngularVelocity = Vector3.new(0, 999999, 0)
             if hum.Sit then hum.Sit = false end
+        end
+        if State.OrbitTarget and State.SelectedTarget and State.SelectedTarget.Character then
+            local tRoot = GetRoot(State.SelectedTarget.Character)
+            if tRoot then
+                OrbitAngle += dt * 4
+                local offset = Vector3.new(math.cos(OrbitAngle) * 6, 2, math.sin(OrbitAngle) * 6)
+                root.CFrame = CFrame.new(tRoot.Position + offset, tRoot.Position)
+            end
+        end
+        if State.AttachTarget and State.SelectedTarget and State.SelectedTarget.Character then
+            local tRoot = GetRoot(State.SelectedTarget.Character)
+            if tRoot then
+                root.CFrame = tRoot.CFrame * CFrame.new(0, 1.5, 2.5)
+            end
         end
     end
 end)
@@ -412,6 +360,76 @@ local function ToggleFullbright(enable: boolean)
         Lighting.ClockTime = State.OriginalClockTime
         Lighting.FogEnd = State.OriginalFogEnd
         Lighting.GlobalShadows = true
+    end
+end
+
+--------------------------------------------------------------------------------
+-- 3. AUDIO STREAM & INTERACTIVE PLAYLIST
+--------------------------------------------------------------------------------
+local AudioStream = Instance.new("Sound")
+AudioStream.Name = "FihMenu_AudioStream"
+AudioStream.Looped = true
+AudioStream.Volume = 1.0
+AudioStream.PlaybackSpeed = 1.0
+AudioStream.Parent = SoundService
+
+local Playlist = {
+    { Title = "Lo-Fi Study Beats", Artist = "Universal Audio [Local]", Id = 9048375035, Cover = "rbxassetid://10849911991", Lyric = "Chill lo-fi study rhythm flowing..." },
+    { Title = "Synthwave Neon Sunset", Artist = "Retro Wave [Spotify]", Id = 9043887091, Cover = "rbxassetid://10849911991", Lyric = "Cruising down the digital highway at night" },
+    { Title = "Chill Ambient Rain", Artist = "Atmospheric Study [Local]", Id = 1837849285, Cover = "rbxassetid://10849911991", Lyric = "Gentle rain tapping against the glass pane" },
+    { Title = "Cyber Arcade 8-Bit", Artist = "Pixel Beats [Chiptune]", Id = 1845499092, Cover = "rbxassetid://10849911991", Lyric = "Insert coin to continue stage 01" },
+}
+
+local CurrentTrackIndex = 0
+local IsAudioPlaying = false
+local SpeedCycle = { 1.0, 1.25, 1.5, 2.0, 0.5 }
+local CurrentSpeedIndex = 1
+
+local OnTrackUpdated = Instance.new("BindableEvent")
+
+local function PlayTrackByIndex(idx: number)
+    if idx < 1 then idx = #Playlist end
+    if idx > #Playlist then idx = 1 end
+    CurrentTrackIndex = idx
+    local track = Playlist[idx]
+
+    AudioStream.SoundId = "rbxassetid://" .. tostring(track.Id)
+    AudioStream:Play()
+    IsAudioPlaying = true
+    OnTrackUpdated:Fire(track, true)
+end
+
+local function TogglePlayPause()
+    if CurrentTrackIndex == 0 then
+        PlayTrackByIndex(1)
+        return
+    end
+
+    if IsAudioPlaying then
+        AudioStream:Pause()
+        IsAudioPlaying = false
+        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], false)
+    else
+        AudioStream:Resume()
+        IsAudioPlaying = true
+        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], true)
+    end
+end
+
+local function NextTrack()
+    PlayTrackByIndex(CurrentTrackIndex == 0 and 1 or (CurrentTrackIndex + 1))
+end
+
+local function PrevTrack()
+    PlayTrackByIndex(CurrentTrackIndex == 0 and 1 or (CurrentTrackIndex - 1))
+end
+
+local function CycleSpeed()
+    CurrentSpeedIndex = (CurrentSpeedIndex % #SpeedCycle) + 1
+    local speed = SpeedCycle[CurrentSpeedIndex]
+    AudioStream.PlaybackSpeed = speed
+    if CurrentTrackIndex > 0 then
+        OnTrackUpdated:Fire(Playlist[CurrentTrackIndex], IsAudioPlaying)
     end
 end
 
@@ -761,11 +779,176 @@ SendBtn.MouseButton1Click:Connect(function() Transmit(ChatBox.Text) end)
 ChatBox.FocusLost:Connect(function(enter) if enter then Transmit(ChatBox.Text) end end)
 
 --------------------------------------------------------------------------------
--- 6. PLAYER LIST OVERLAY (Right Side)
+-- 6. PLAYER LIST OVERLAY WITH CONTEXT POPUP CARD
 --------------------------------------------------------------------------------
 pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end)
 
 local PlrWin = CreateWindow("Players (0)", UDim2.new(0, 220, 0, 180), UDim2.new(1, -235, 0, 15), Vector2.new(180, 100))
+
+-- Player Profile Popup Card (Appears directly next to the player list)
+local ProfilePopup = Instance.new("Frame", ScreenHost)
+ProfilePopup.Name = "Fih_PlayerProfilePopup"
+ProfilePopup.Size = UDim2.new(0, 210, 0, 200)
+ProfilePopup.Position = UDim2.new(1, -455, 0, 15)
+ProfilePopup.BackgroundColor3 = GetColor("BackgroundPrimary")
+ProfilePopup.BackgroundTransparency = 0.1
+ProfilePopup.BorderSizePixel = 0
+ProfilePopup.ZIndex = 80
+ProfilePopup.Visible = false
+
+local PopupStroke = Instance.new("UIStroke", ProfilePopup)
+PopupStroke.Thickness = 1
+PopupStroke.Color = GetColor("Accent")
+RegisterBinding(PopupStroke, "Color", "Accent")
+
+local PopupHeader = Instance.new("Frame", ProfilePopup)
+PopupHeader.Size = UDim2.new(1, 0, 0, 20)
+PopupHeader.BackgroundColor3 = GetColor("BackgroundSecondary")
+PopupHeader.BorderSizePixel = 0
+PopupHeader.ZIndex = 81
+
+local PopupTitle = Instance.new("TextLabel", PopupHeader)
+PopupTitle.Size = UDim2.new(1, -25, 1, 0)
+PopupTitle.Position = UDim2.new(0, 6, 0, 0)
+PopupTitle.BackgroundTransparency = 1
+PopupTitle.Font = Enum.Font.Code
+PopupTitle.Text = "Player Details"
+PopupTitle.TextColor3 = GetColor("Accent")
+PopupTitle.TextSize = 9
+PopupTitle.TextXAlignment = Enum.TextXAlignment.Left
+PopupTitle.ZIndex = 82
+RegisterBinding(PopupTitle, "TextColor3", "Accent")
+
+local PopupClose = Instance.new("TextButton", PopupHeader)
+PopupClose.Size = UDim2.new(0, 16, 0, 14)
+PopupClose.Position = UDim2.new(1, -18, 0.5, -7)
+PopupClose.BackgroundColor3 = GetColor("Surface")
+PopupClose.BorderSizePixel = 0
+PopupClose.Font = Enum.Font.Code
+PopupClose.Text = "✕"
+PopupClose.TextColor3 = Color3.new(1, 1, 1)
+PopupClose.TextSize = 9
+PopupClose.ZIndex = 83
+PopupClose.MouseButton1Click:Connect(function() ProfilePopup.Visible = false end)
+
+local PopAvatar = Instance.new("ImageLabel", ProfilePopup)
+PopAvatar.Size = UDim2.new(0, 36, 0, 36)
+PopAvatar.Position = UDim2.new(0, 6, 0, 26)
+PopAvatar.BackgroundColor3 = GetColor("Surface")
+PopAvatar.BorderSizePixel = 0
+PopAvatar.ZIndex = 81
+
+local PopDName = Instance.new("TextLabel", ProfilePopup)
+PopDName.Size = UDim2.new(1, -50, 0, 13)
+PopDName.Position = UDim2.new(0, 46, 0, 25)
+PopDName.BackgroundTransparency = 1
+PopDName.Font = Enum.Font.Code
+PopDName.Text = "DisplayName"
+PopDName.TextColor3 = GetColor("TextPrimary")
+PopDName.TextSize = 10
+PopDName.TextXAlignment = Enum.TextXAlignment.Left
+PopDName.ZIndex = 81
+
+local PopUName = Instance.new("TextLabel", ProfilePopup)
+PopUName.Size = UDim2.new(1, -50, 0, 12)
+PopUName.Position = UDim2.new(0, 46, 0, 38)
+PopUName.BackgroundTransparency = 1
+PopUName.Font = Enum.Font.Code
+PopUName.Text = "@Username"
+PopUName.TextColor3 = GetColor("Accent")
+PopUName.TextSize = 8
+PopUName.TextXAlignment = Enum.TextXAlignment.Left
+PopUName.ZIndex = 81
+RegisterBinding(PopUName, "TextColor3", "Accent")
+
+local PopInfo = Instance.new("TextLabel", ProfilePopup)
+PopInfo.Size = UDim2.new(1, -50, 0, 12)
+PopInfo.Position = UDim2.new(0, 46, 0, 50)
+PopInfo.BackgroundTransparency = 1
+PopInfo.Font = Enum.Font.Code
+PopInfo.Text = "Age: 0d | ID: 0"
+PopInfo.TextColor3 = GetColor("TextSecondary")
+PopInfo.TextSize = 8
+PopInfo.TextXAlignment = Enum.TextXAlignment.Left
+PopInfo.ZIndex = 81
+
+local ActionBtnList = Instance.new("Frame", ProfilePopup)
+ActionBtnList.Size = UDim2.new(1, -12, 0, 125)
+ActionBtnList.Position = UDim2.new(0, 6, 0, 68)
+ActionBtnList.BackgroundTransparency = 1
+ActionBtnList.ZIndex = 81
+
+local ActionLayout = Instance.new("UIListLayout", ActionBtnList)
+ActionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ActionLayout.Padding = UDim.new(0, 3)
+
+local ContextSelectedPlr: Player? = nil
+local TargetDropdownLabel = nil
+local UpdateTrollDropdownDisplay = function() end
+
+local function CreateActionBtn(txt: string, onClick: () -> ())
+    local b = Instance.new("TextButton", ActionBtnList)
+    b.Size = UDim2.new(1, 0, 0, 20)
+    b.BackgroundColor3 = GetColor("Surface")
+    b.BorderSizePixel = 0
+    b.Font = Enum.Font.Code
+    b.Text = txt
+    b.TextColor3 = GetColor("TextPrimary")
+    b.TextSize = 8
+    b.ZIndex = 82
+    b.MouseButton1Click:Connect(onClick)
+end
+
+CreateActionBtn("🎯 Set As Troll Target", function()
+    if ContextSelectedPlr then
+        State.SelectedTarget = ContextSelectedPlr
+        UpdateTrollDropdownDisplay()
+        ProfilePopup.Visible = false
+    end
+end)
+
+CreateActionBtn("⚡ Teleport To Player", function()
+    if ContextSelectedPlr and ContextSelectedPlr.Character then
+        local tRoot = GetRoot(ContextSelectedPlr.Character)
+        local myRoot = GetRoot()
+        if tRoot and myRoot then myRoot.CFrame = tRoot.CFrame + Vector3.new(0, 2, 0) end
+    end
+end)
+
+CreateActionBtn("👁 Spectate Player", function()
+    if ContextSelectedPlr and ContextSelectedPlr.Character then
+        local hum = GetHumanoid(ContextSelectedPlr.Character)
+        if hum then Camera.CameraSubject = hum end
+    end
+end)
+
+CreateActionBtn("👥 Send Friend Request", function()
+    if ContextSelectedPlr then
+        pcall(function() StarterGui:SetCore("PromptSendFriendRequest", ContextSelectedPlr) end)
+    end
+end)
+
+CreateActionBtn("👕 Inspect Roblox Avatar", function()
+    if ContextSelectedPlr then
+        pcall(function() GuiService:InspectPlayerFromUserId(ContextSelectedPlr.UserId) end)
+    end
+end)
+
+local function OpenPlayerPopup(plr: Player, rowBtn: TextButton)
+    ContextSelectedPlr = plr
+    PopDName.Text = plr.DisplayName
+    PopUName.Text = "@" .. plr.Name
+    PopInfo.Text = "Age: " .. tostring(plr.AccountAge) .. "d | ID: " .. tostring(plr.UserId)
+    PopAvatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(plr.UserId) .. "&w=100&h=100"
+
+    local rowPos = rowBtn.AbsolutePosition
+    local vp = Workspace.CurrentCamera and Workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
+    local targetX = math.clamp(PlrWin.Frame.AbsolutePosition.X - 215, 5, vp.X - 220)
+    local targetY = math.clamp(rowPos.Y - 10, 5, vp.Y - 210)
+
+    ProfilePopup.Position = UDim2.new(0, targetX, 0, targetY)
+    ProfilePopup.Visible = true
+end
 
 local PlrScroll = Instance.new("ScrollingFrame", PlrWin.Content)
 PlrScroll.Size = UDim2.new(1, -8, 1, -8)
@@ -818,8 +1001,7 @@ local function RefreshPlayerList()
         nameLbl.TextXAlignment = Enum.TextXAlignment.Left
 
         row.MouseButton1Click:Connect(function()
-            State.SelectedTarget = plr
-            print("[Fih Menu] Target selected: " .. plr.DisplayName)
+            OpenPlayerPopup(plr, row)
         end)
     end
 end
@@ -829,7 +1011,7 @@ Players.PlayerAdded:Connect(RefreshPlayerList)
 Players.PlayerRemoving:Connect(RefreshPlayerList)
 
 --------------------------------------------------------------------------------
--- 7. MUSIC HUD (Bottom Left, Placeholder Idle State & Functional Controls)
+-- 7. MUSIC HUD (Bottom-Left)
 --------------------------------------------------------------------------------
 local MusicWin = CreateWindow("Fih HUD :: Now Playing & Synced Lyrics", UDim2.new(0, 320, 0, 130), UDim2.new(0, 15, 1, -145), Vector2.new(280, 110))
 
@@ -883,7 +1065,6 @@ LyricsLabel.TextColor3 = GetColor("TextSecondary")
 LyricsLabel.TextSize = 8
 LyricsLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Interactive Audio Controls Bar
 local ControlsBar = Instance.new("Frame", SongDetails)
 ControlsBar.Size = UDim2.new(1, 0, 0, 16)
 ControlsBar.Position = UDim2.new(0, 0, 0, 44)
@@ -934,7 +1115,6 @@ for i = 1, 16 do
     table.insert(VisualizerBars, bar)
 end
 
--- Reactive Audio State Listener
 OnTrackUpdated.Event:Connect(function(track, isPlaying)
     if track then
         CoverArt.Image = track.Cover or ""
@@ -1108,9 +1288,7 @@ local DrawerLayout = Instance.new("UIListLayout", DrawerScroll)
 DrawerLayout.SortOrder = Enum.SortOrder.LayoutOrder
 DrawerLayout.Padding = UDim.new(0, 4)
 
--- Toggle-To-Close Drawer Engine
 local CurrentOpenDrawer = ""
-
 local function CloseDrawer()
     CurrentOpenDrawer = ""
     local tw = TweenService:Create(DrawerOverlay, TweenInfo.new(0.20, Enum.EasingStyle.Quad), { Position = UDim2.new(0, 0, -1, 0) })
@@ -1176,7 +1354,7 @@ CreateSubBtn("Settings", function()
     end)
 end)
 
--- Tab Builder (Single Unified Scrollbar per Tab)
+-- Tab Builder
 local TabPages = {}
 local TabButtons = {}
 local CurrentTab = ""
@@ -1450,7 +1628,7 @@ local function AddButton(parent: Instance, label: string, onClick: () -> ())
 end
 
 --------------------------------------------------------------------------------
--- 9. TAB REGISTRATION & CONTENT
+-- 9. TAB REGISTRATION & RICH CONTENT
 --------------------------------------------------------------------------------
 RegisterTab("Main", false, true)
 RegisterTab("Esp", false, false)
@@ -1460,7 +1638,7 @@ RegisterTab("Scripts", false, false)
 RegisterTab("Themes", true, false)
 
 ----------------------------------------------------------------------------
--- TAB 1: MAIN (Hero Banner + Complete Cheats)
+-- TAB 1: MAIN
 ----------------------------------------------------------------------------
 local mMove = CreateCard(TabPages["Main"].Left, "[Movement & Physics]")
 AddToggle(mMove, "Infinite Jump", false, function(s) State.InfiniteJump = s end)
@@ -1505,7 +1683,7 @@ AddSlider(eRight, "Camera FOV", 60, 120, 70, function(v) Camera.FieldOfView = v 
 AddButton(eRight, "Remove Fog", function() Lighting.FogEnd = 100000 end)
 
 ----------------------------------------------------------------------------
--- TAB 3: MUSIC (Sound Engine, Presets & Controls)
+-- TAB 3: MUSIC
 ----------------------------------------------------------------------------
 local muLeft = CreateCard(TabPages["Music"].Left, "[Audio Streamer]")
 AddToggle(muLeft, "Stream Play / Pause", false, function(s) TogglePlayPause() end)
@@ -1522,18 +1700,154 @@ AddToggle(muRight, "Chat Overlay Visible", true, function(s) ChatWin.Frame.Visib
 AddToggle(muRight, "Player List Visible", true, function(s) PlrWin.Frame.Visible = s end)
 
 ----------------------------------------------------------------------------
--- TAB 4: TROLL (Player Targets & Stabilized Fling)
+-- TAB 4: TROLL (Player Dropdown Selector & Cycling Arrows)
 ----------------------------------------------------------------------------
 local tLeft = CreateCard(TabPages["Troll"].Left, "[Target Player]")
-local TargetNameLabel = Instance.new("TextLabel", tLeft)
-TargetNameLabel.Size = UDim2.new(1, 0, 0, 16)
-TargetNameLabel.BackgroundTransparency = 1
-TargetNameLabel.Font = Enum.Font.Code
-TargetNameLabel.Text = "Target: [Select in Player List]"
-TargetNameLabel.TextColor3 = GetColor("Accent")
-TargetNameLabel.TextSize = 9
-TargetNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-RegisterBinding(TargetNameLabel, "TextColor3", "Accent")
+
+-- Interactive Player Selector Row (< [ Dropdown ] >)
+local TargetSelRow = Instance.new("Frame", tLeft)
+TargetSelRow.Size = UDim2.new(1, 0, 0, 22)
+TargetSelRow.BackgroundColor3 = GetColor("BackgroundSecondary")
+TargetSelRow.BorderSizePixel = 0
+
+local PrevPlrBtn = Instance.new("TextButton", TargetSelRow)
+PrevPlrBtn.Size = UDim2.new(0, 20, 1, 0)
+PrevPlrBtn.BackgroundColor3 = GetColor("Surface")
+PrevPlrBtn.BorderSizePixel = 0
+PrevPlrBtn.Font = Enum.Font.Code
+PrevPlrBtn.Text = "<"
+PrevPlrBtn.TextColor3 = GetColor("TextPrimary")
+PrevPlrBtn.TextSize = 9
+
+local DropTriggerBtn = Instance.new("TextButton", TargetSelRow)
+DropTriggerBtn.Size = UDim2.new(1, -44, 1, 0)
+DropTriggerBtn.Position = UDim2.new(0, 22, 0, 0)
+DropTriggerBtn.BackgroundColor3 = GetColor("Surface")
+DropTriggerBtn.BorderSizePixel = 0
+DropTriggerBtn.Font = Enum.Font.Code
+DropTriggerBtn.Text = "▼ [ Closest Player ]"
+DropTriggerBtn.TextColor3 = GetColor("Accent")
+DropTriggerBtn.TextSize = 8
+DropTriggerBtn.TextTruncate = Enum.TextTruncate.AtEnd
+RegisterBinding(DropTriggerBtn, "TextColor3", "Accent")
+
+local NextPlrBtn = Instance.new("TextButton", TargetSelRow)
+NextPlrBtn.Size = UDim2.new(0, 20, 1, 0)
+NextPlrBtn.Position = UDim2.new(1, -20, 0, 0)
+NextPlrBtn.BackgroundColor3 = GetColor("Surface")
+NextPlrBtn.BorderSizePixel = 0
+NextPlrBtn.Font = Enum.Font.Code
+NextPlrBtn.Text = ">"
+NextPlrBtn.TextColor3 = GetColor("TextPrimary")
+NextPlrBtn.TextSize = 9
+
+local DropdownMenu = Instance.new("Frame", ScreenHost)
+DropdownMenu.Name = "Fih_TrollDropdownMenu"
+DropdownMenu.Size = UDim2.new(0, 180, 0, 120)
+DropdownMenu.BackgroundColor3 = GetColor("BackgroundPrimary")
+DropdownMenu.BorderSizePixel = 0
+DropdownMenu.ZIndex = 90
+DropdownMenu.Visible = false
+
+local DropStroke = Instance.new("UIStroke", DropdownMenu)
+DropStroke.Thickness = 1
+DropStroke.Color = GetColor("Accent")
+RegisterBinding(DropStroke, "Color", "Accent")
+
+local DropScroll = Instance.new("ScrollingFrame", DropdownMenu)
+DropScroll.Size = UDim2.new(1, -4, 1, -4)
+DropScroll.Position = UDim2.new(0, 2, 0, 2)
+DropScroll.BackgroundTransparency = 1
+DropScroll.BorderSizePixel = 0
+DropScroll.ScrollBarThickness = 2
+DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+DropScroll.ZIndex = 91
+
+local DropLayout = Instance.new("UIListLayout", DropScroll)
+DropLayout.SortOrder = Enum.SortOrder.LayoutOrder
+DropLayout.Padding = UDim.new(0, 2)
+
+UpdateTrollDropdownDisplay = function()
+    if State.SelectedTarget then
+        DropTriggerBtn.Text = "▼ " .. State.SelectedTarget.DisplayName .. " (@" .. State.SelectedTarget.Name .. ")"
+    else
+        DropTriggerBtn.Text = "▼ [ Closest Player ]"
+    end
+end
+
+local function CyclePlayer(dir: number)
+    local allOther = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then table.insert(allOther, p) end
+    end
+    if #allOther == 0 then return end
+
+    local curIdx = 0
+    for i, p in ipairs(allOther) do
+        if p == State.SelectedTarget then curIdx = i break end
+    end
+
+    local nextIdx = curIdx + dir
+    if nextIdx > #allOther then nextIdx = 1 end
+    if nextIdx < 1 then nextIdx = #allOther end
+
+    State.SelectedTarget = allOther[nextIdx]
+    UpdateTrollDropdownDisplay()
+end
+
+PrevPlrBtn.MouseButton1Click:Connect(function() CyclePlayer(-1) end)
+NextPlrBtn.MouseButton1Click:Connect(function() CyclePlayer(1) end)
+
+local function OpenTrollDropdown()
+    if DropdownMenu.Visible then
+        DropdownMenu.Visible = false
+        return
+    end
+
+    for _, c in ipairs(DropScroll:GetChildren()) do
+        if c:IsA("GuiObject") then c:Destroy() end
+    end
+
+    local function MakeDropRow(label: string, onClick: () -> ())
+        local r = Instance.new("TextButton", DropScroll)
+        r.Size = UDim2.new(1, 0, 0, 20)
+        r.BackgroundColor3 = GetColor("Surface")
+        r.BorderSizePixel = 0
+        r.Font = Enum.Font.Code
+        r.Text = "  " .. label
+        r.TextColor3 = GetColor("TextPrimary")
+        r.TextSize = 8
+        r.TextXAlignment = Enum.TextXAlignment.Left
+        r.TextTruncate = Enum.TextTruncate.AtEnd
+        r.ZIndex = 92
+        r.MouseButton1Click:Connect(function()
+            onClick()
+            DropdownMenu.Visible = false
+        end)
+    end
+
+    MakeDropRow("[ Closest Player ]", function()
+        State.SelectedTarget = nil
+        UpdateTrollDropdownDisplay()
+    end)
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            MakeDropRow(p.DisplayName .. " (@" .. p.Name .. ")", function()
+                State.SelectedTarget = p
+                UpdateTrollDropdownDisplay()
+            end)
+        end
+    end
+
+    local absPos = TargetSelRow.AbsolutePosition
+    local absSize = TargetSelRow.AbsoluteSize
+    DropdownMenu.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 2)
+    DropdownMenu.Size = UDim2.new(0, absSize.X, 0, math.clamp((#Players:GetPlayers() * 22), 60, 160))
+    DropdownMenu.Visible = true
+end
+
+DropTriggerBtn.MouseButton1Click:Connect(OpenTrollDropdown)
 
 AddButton(tLeft, "Teleport To Target", function()
     if State.SelectedTarget and State.SelectedTarget.Character then
@@ -1554,7 +1868,7 @@ AddButton(tLeft, "Reset Spectate", function()
     Camera.CameraSubject = GetHumanoid()
 end)
 
-local tRight = CreateCard(TabPages["Troll"].Right, "[Fling Physics]")
+local tRight = CreateCard(TabPages["Troll"].Right, "[Fling & Physics]")
 AddToggle(tRight, "Walk Fling (Stabilized)", false, function(s) State.WalkFling = s end)
 AddButton(tRight, "Fling Selected Target", function()
     if State.SelectedTarget and State.SelectedTarget.Character then
@@ -1568,9 +1882,11 @@ AddButton(tRight, "Fling Selected Target", function()
         end
     end
 end)
+AddToggle(tRight, "Orbit Swarm Target", false, function(s) State.OrbitTarget = s end)
+AddToggle(tRight, "Attach / Backpack Target", false, function(s) State.AttachTarget = s end)
 
 ----------------------------------------------------------------------------
--- TAB 5: SCRIPTS (Universal Hub Shortcuts & Custom Execution)
+-- TAB 5: SCRIPTS
 ----------------------------------------------------------------------------
 local sLeft = CreateCard(TabPages["Scripts"].Left, "[Universal Hubs]")
 AddButton(sLeft, "Infinite Yield", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
@@ -1581,7 +1897,7 @@ local sRight = CreateCard(TabPages["Scripts"].Right, "[Custom Code Slot]")
 AddButton(sRight, "Execute Potassium Hooks", function() print("[Fih Menu]: Hooks active.") end)
 
 ----------------------------------------------------------------------------
--- TAB 6: THEMES (Global Multi-Element Recoloring)
+-- TAB 6: THEMES
 ----------------------------------------------------------------------------
 local thLeft = CreateCard(TabPages["Themes"].Left, "[Theme Presets]")
 for name, col in pairs(Presets) do
@@ -1591,4 +1907,4 @@ end
 -- Start on Main tab
 SwitchTab("Main")
 
-print("[Fih Menu]: Suite updated with global theming & interactive music.")
+print("[Fih Menu]: Fully populated suite with player popup & troll dropdown booted.")
