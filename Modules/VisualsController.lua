@@ -1,6 +1,4 @@
 -- Modules/VisualsController.lua
--- Universal 2D Box ESP, Name Tags, Chams Highlights, Fullbright & FOV
-
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
@@ -49,7 +47,7 @@ function VisualsController.SetHighlights(enable: boolean)
                 if not hl then
                     hl = Instance.new("Highlight")
                     hl.Name = "FihHighlight"
-                    hl.FillColor = Color3.fromRGB(85, 170, 255)
+                    hl.FillColor = Color3.fromRGB(255, 60, 180)
                     hl.FillTransparency = 0.5
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
                     hl.OutlineTransparency = 0.1
@@ -75,20 +73,20 @@ function VisualsController.SetBoxESP(enable: boolean)
                         local b = Instance.new("BillboardGui")
                         b.Name = "FihESP_Box"
                         b.Adornee = root
-                        b.Size = UDim2.new(4.2, 0, 5.8, 0)
+                        b.Size = UDim2.new(4, 0, 5.5, 0)
                         b.AlwaysOnTop = true
                         b.Parent = root
 
                         local frame = Instance.new("Frame")
                         frame.Size = UDim2.new(1, 0, 1, 0)
                         frame.BackgroundTransparency = 0.85
-                        frame.BackgroundColor3 = Color3.fromRGB(85, 170, 255)
+                        frame.BackgroundColor3 = Color3.fromRGB(255, 60, 180)
                         frame.BorderSizePixel = 0
                         frame.Parent = b
 
                         local s = Instance.new("UIStroke")
                         s.Thickness = 1.5
-                        s.Color = Color3.fromRGB(85, 170, 255)
+                        s.Color = Color3.fromRGB(255, 60, 180)
                         s.Parent = frame
                     end
                 else
@@ -111,7 +109,7 @@ function VisualsController.SetNameESP(enable: boolean)
                         local b = Instance.new("BillboardGui")
                         b.Name = "FihESP_Name"
                         b.Adornee = head
-                        b.Size = UDim2.new(0, 130, 0, 26)
+                        b.Size = UDim2.new(0, 120, 0, 24)
                         b.StudsOffset = Vector3.new(0, 2.2, 0)
                         b.AlwaysOnTop = true
                         b.Parent = head
@@ -120,8 +118,8 @@ function VisualsController.SetNameESP(enable: boolean)
                         lbl.Size = UDim2.new(1, 0, 1, 0)
                         lbl.BackgroundTransparency = 1
                         lbl.Font = Enum.Font.Code
-                        lbl.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
-                        lbl.TextColor3 = Color3.fromRGB(240, 240, 245)
+                        lbl.Text = plr.DisplayName
+                        lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
                         lbl.TextSize = 10
                         lbl.Parent = b
                     end

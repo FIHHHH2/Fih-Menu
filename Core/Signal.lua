@@ -1,32 +1,17 @@
 -- Core/Signal.lua
--- Fast Signal / Event Dispatcher for Luau
-
 local Signal = {}
 Signal.__index = Signal
 
-export type Connection = {
-    Disconnect: (self: Connection) -> (),
-    Connected: boolean,
-}
-
-export type SignalType = {
-    Connect: (self: SignalType, fn: (...any) -> ()) -> Connection,
-    Fire: (self: SignalType, ...any) -> (),
-    Destroy: (self: SignalType) -> (),
-}
-
-function Signal.new(): SignalType
+function Signal.new()
     local self = setmetatable({}, Signal)
     self._bindable = Instance.new("BindableEvent")
-    return (self :: any)
+    return self
 end
 
-function Signal:Connect(fn: (...any) -> ())
+function Signal:Connect(fn)
     local conn = self._bindable.Event:Connect(fn)
     return {
-        Disconnect = function()
-            conn:Disconnect()
-        end,
+        Disconnect = function() conn:Disconnect() end,
         Connected = true,
     }
 end

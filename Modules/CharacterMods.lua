@@ -1,6 +1,4 @@
 -- Modules/CharacterMods.lua
--- WalkSpeed, JumpPower, Infinite Jump, Stepped Noclip, Gravity, HipHeight & Spinbot
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -12,7 +10,6 @@ local CharacterMods = {
     WalkSpeed = 16,
     JumpPower = 50,
     Gravity = 196.2,
-    HipHeight = 2,
     InfiniteJump = false,
     Noclip = false,
     Spinbot = false,
@@ -50,12 +47,6 @@ function CharacterMods.SetGravity(grav: number)
     Workspace.Gravity = grav
 end
 
-function CharacterMods.SetHipHeight(h: number)
-    CharacterMods.HipHeight = h
-    local hum = GetHumanoid()
-    if hum then hum.HipHeight = h end
-end
-
 function CharacterMods.SetInfiniteJump(enable: boolean)
     CharacterMods.InfiniteJump = enable
 end
@@ -68,9 +59,7 @@ function CharacterMods.SetNoclip(enable: boolean)
                 local char = LocalPlayer.Character
                 if char then
                     for _, p in ipairs(char:GetDescendants()) do
-                        if p:IsA("BasePart") then
-                            p.CanCollide = false
-                        end
+                        if p:IsA("BasePart") then p.CanCollide = false end
                     end
                 end
             end)
@@ -105,9 +94,7 @@ end
 UserInputService.JumpRequest:Connect(function()
     if CharacterMods.InfiniteJump then
         local hum = GetHumanoid()
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
     end
 end)
 
