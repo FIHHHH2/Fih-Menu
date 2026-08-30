@@ -1,11 +1,11 @@
 -- Core/WindowBase.lua
--- Translucent, Draggable, Resizable Base Window with Snapping & Layering
+-- Robust Draggable & Resizable Translucent Base Window Architecture
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
-local TopZIndex = 20
+local TopZIndex = 25
 local WindowBase = {}
 WindowBase.__index = WindowBase
 
@@ -18,20 +18,20 @@ function WindowBase.AttachMicroInteractions(button: GuiButton)
     end
 
     button.MouseEnter:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.035 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.03 }):Play()
     end)
     button.MouseLeave:Connect(function()
         TweenService:Create(scale, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.0 }):Play()
     end)
     button.MouseButton1Down:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.95 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.96 }):Play()
     end)
     button.MouseButton1Up:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.035 }):Play()
+        TweenService:Create(scale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.03 }):Play()
     end)
 end
 
-function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2, minSize: Vector2?, screenHost: ScreenGui, themeManager: any, signalMod: any)
+function WindowBase.new(titleText: string, defaultSize: UDim2, initialPos: UDim2, minSize: Vector2?, screenHost: ScreenGui, themeManager: any, signalMod: any)
     local self = setmetatable({}, WindowBase)
     self.MinSize = minSize or Vector2.new(240, 160)
     self.MaxSize = Vector2.new(1920, 1080)
@@ -39,11 +39,16 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
     self.StoredSize = defaultSize
     self.OnClose = signalMod.new()
 
-    -- Root Window Frame (Translucent Glass Styling)
+    -- Compute Pure Absolute Pixel Starting Position (Resolves Mixed Scale Bugs)
+    local vp = Workspace.CurrentCamera and Workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
+    local initX = initialPos.X.Scale * vp.X + initialPos.X.Offset
+    local initY = initialPos.Y.Scale * vp.Y + initialPos.Y.Offset
+
+    -- Root Translucent Window Frame
     local Frame = Instance.new("Frame")
     Frame.Name = titleText .. "_Window"
     Frame.Size = defaultSize
-    Frame.Position = defaultPos
+    Frame.Position = UDim2.new(0, math.clamp(initX, 0, vp.X - 100), 0, math.clamp(initY, 0, vp.Y - 50))
     Frame.BackgroundColor3 = themeManager.Get("BackgroundPrimary")
     Frame.BackgroundTransparency = themeManager.GetTransparency("BackgroundPrimary")
     Frame.BorderSizePixel = 0
@@ -65,13 +70,14 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
     Stroke.Parent = Frame
     self.Stroke = Stroke
 
-    -- Top Bar (Movable Drag Handle)
+    -- Top Bar (Drag Handle)
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, 0, 0, 28)
     TopBar.BackgroundColor3 = themeManager.Get("BackgroundSecondary")
     TopBar.BackgroundTransparency = themeManager.GetTransparency("BackgroundSecondary")
     TopBar.BorderSizePixel = 0
+    TopBar.Active = true
     TopBar.Parent = Frame
     self.TopBar = TopBar
 
@@ -90,23 +96,24 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
 
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "Title"
-    TitleLabel.Size = UDim2.new(1, -110, 1, 0)
+    TitleLabel.Size = UDim2.new(1, -120, 1, 0)
     TitleLabel.Position = UDim2.new(0, 10, 0, 0)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.Code
     TitleLabel.Text = string.upper(titleText)
     TitleLabel.TextColor3 = themeManager.Get("TextPrimary")
-    TitleLabel.TextSize = 13
+    TitleLabel.TextSize = 12
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TopBar
     self.TitleLabel = TitleLabel
 
-    -- Controls (Minimize & Close)
+    -- Controls (Min & Close)
     local Controls = Instance.new("Frame")
     Controls.Name = "Controls"
-    Controls.Size = UDim2.new(0, 60, 1, 0)
-    Controls.Position = UDim2.new(1, -64, 0, 0)
+    Controls.Size = UDim2.new(0, 58, 1, 0)
+    Controls.Position = UDim2.new(1, -62, 0, 0)
     Controls.BackgroundTransparency = 1
+    Controls.ZIndex = 15
     Controls.Parent = TopBar
 
     local Layout = Instance.new("UIListLayout")
@@ -128,6 +135,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
     MinBtn.TextColor3 = themeManager.Get("TextSecondary")
     MinBtn.TextSize = 11
     MinBtn.AutoButtonColor = false
+    MinBtn.ZIndex = 16
     MinBtn.Parent = Controls
 
     local MinCorner = Instance.new("UICorner")
@@ -151,6 +159,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
     CloseBtn.TextColor3 = themeManager.Get("TextSecondary")
     CloseBtn.TextSize = 11
     CloseBtn.AutoButtonColor = false
+    CloseBtn.ZIndex = 16
     CloseBtn.Parent = Controls
 
     local CloseCorner = Instance.new("UICorner")
@@ -163,7 +172,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
     CloseStroke.Transparency = 0.4
     CloseStroke.Parent = CloseBtn
 
-    -- Content Area
+    -- Content Viewport
     local Content = Instance.new("Frame")
     Content.Name = "Content"
     Content.Size = UDim2.new(1, 0, 1, -28)
@@ -184,7 +193,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
     Grip.Font = Enum.Font.Code
     Grip.TextColor3 = themeManager.Get("TextSecondary")
     Grip.TextSize = 13
-    Grip.ZIndex = 10
+    Grip.ZIndex = 20
     Grip.Parent = Frame
     self.Grip = Grip
 
@@ -194,7 +203,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
         Frame.ZIndex = TopZIndex
         Stroke.Color = themeManager.Get("BorderActive")
         Stroke.Transparency = 0
-        task.delay(0.6, function()
+        task.delay(0.5, function()
             if Frame and Frame.Parent and Stroke then
                 Stroke.Color = themeManager.Get("Border")
                 Stroke.Transparency = themeManager.GetTransparency("Border")
@@ -208,78 +217,80 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
         end
     end)
 
-    -- Window Dragging across Screen
+    -- Normalized Pixel-Accurate Window Dragging
     local Dragging = false
-    local DragStart = Vector2.zero
-    local StartPos = UDim2.new()
+    local DragStartMouse = Vector2.zero
+    local DragStartPos = Vector2.zero
 
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             Dragging = true
-            DragStart = input.Position
-            StartPos = Frame.Position
+            DragStartMouse = Vector2.new(input.Position.X, input.Position.Y)
+            DragStartPos = Vector2.new(Frame.AbsolutePosition.X, Frame.AbsolutePosition.Y)
             BringToFront()
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    Dragging = false
-                end
-            end)
         end
     end)
 
-    UserInputService.InputChanged:Connect(function(input)
-        if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - DragStart
-            local vp = Workspace.CurrentCamera.ViewportSize
-            local targetX = StartPos.X.Offset + delta.X
-            local targetY = StartPos.Y.Offset + delta.Y
-
-            -- Snapping
-            if targetX < 14 then targetX = 0 end
-            if targetY < 14 then targetY = 0 end
-            if math.abs((targetX + Frame.AbsoluteSize.X) - vp.X) < 14 then
-                targetX = vp.X - Frame.AbsoluteSize.X
-            end
-            if math.abs((targetY + Frame.AbsoluteSize.Y) - vp.Y) < 14 then
-                targetY = vp.Y - Frame.AbsoluteSize.Y
-            end
-
-            Frame.Position = UDim2.new(StartPos.X.Scale, targetX, StartPos.Y.Scale, targetY)
-        end
-    end)
-
-    -- Corner Resizing
+    -- Normalized Pixel-Accurate Resizing
     local Resizing = false
     local ResizeStartMouse = Vector2.zero
     local ResizeStartSize = Vector2.zero
 
     Grip.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             Resizing = true
             ResizeStartMouse = Vector2.new(input.Position.X, input.Position.Y)
             ResizeStartSize = Frame.AbsoluteSize
             BringToFront()
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    Resizing = false
-                end
-            end)
         end
     end)
 
+    -- Global Input Changed
     UserInputService.InputChanged:Connect(function(input)
-        if Resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local mousePos = Vector2.new(input.Position.X, input.Position.Y)
-            local delta = mousePos - ResizeStartMouse
-            local newW = math.clamp(ResizeStartSize.X + delta.X, self.MinSize.X, self.MaxSize.X)
-            local newH = math.clamp(ResizeStartSize.Y + delta.Y, self.MinSize.Y, self.MaxSize.Y)
-            Frame.Size = UDim2.new(0, newW, 0, newH)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            local currentVp = Workspace.CurrentCamera and Workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
+
+            if Dragging then
+                local currentMouse = Vector2.new(input.Position.X, input.Position.Y)
+                local delta = currentMouse - DragStartMouse
+                local targetX = DragStartPos.X + delta.X
+                local targetY = DragStartPos.Y + delta.Y
+
+                -- Clamp within Viewport
+                targetX = math.clamp(targetX, 0, currentVp.X - Frame.AbsoluteSize.X)
+                targetY = math.clamp(targetY, 0, currentVp.Y - Frame.AbsoluteSize.Y)
+
+                -- Viewport Edge Snapping (< 14px)
+                if targetX < 14 then targetX = 0 end
+                if targetY < 14 then targetY = 0 end
+                if math.abs((targetX + Frame.AbsoluteSize.X) - currentVp.X) < 14 then
+                    targetX = currentVp.X - Frame.AbsoluteSize.X
+                end
+                if math.abs((targetY + Frame.AbsoluteSize.Y) - currentVp.Y) < 14 then
+                    targetY = currentVp.Y - Frame.AbsoluteSize.Y
+                end
+
+                Frame.Position = UDim2.new(0, targetX, 0, targetY)
+            elseif Resizing then
+                local currentMouse = Vector2.new(input.Position.X, input.Position.Y)
+                local delta = currentMouse - ResizeStartMouse
+                local newW = math.clamp(ResizeStartSize.X + delta.X, self.MinSize.X, currentVp.X - Frame.AbsolutePosition.X)
+                local newH = math.clamp(ResizeStartSize.Y + delta.Y, self.MinSize.Y, currentVp.Y - Frame.AbsolutePosition.Y)
+
+                Frame.Size = UDim2.new(0, newW, 0, newH)
+            end
         end
     end)
 
-    -- Window Controls Interactions
+    -- Global Input Ended (Never Drops Drag/Resize)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = false
+            Resizing = false
+        end
+    end)
+
+    -- Minimize Action
     MinBtn.MouseButton1Click:Connect(function()
         self.IsMinimized = not self.IsMinimized
         if self.IsMinimized then
@@ -296,6 +307,7 @@ function WindowBase.new(titleText: string, defaultSize: UDim2, defaultPos: UDim2
         end
     end)
 
+    -- Close Action
     CloseBtn.MouseButton1Click:Connect(function()
         self.OnClose:Fire()
         Frame.Visible = false

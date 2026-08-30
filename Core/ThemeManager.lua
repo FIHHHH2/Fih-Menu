@@ -1,5 +1,5 @@
 -- Core/ThemeManager.lua
--- Translucent Glassmorphic Theme Engine with Dynamic Accent Transitions
+-- Translucent Glassmorphic Theme Engine with Adaptive Accent Interpolation
 
 local TweenService = game:GetService("TweenService")
 
@@ -7,14 +7,14 @@ local ThemeManager = {}
 ThemeManager.__index = ThemeManager
 
 local Tokens = {
-    BackgroundPrimary   = Color3.fromRGB(16, 16, 22),
+    BackgroundPrimary   = Color3.fromRGB(15, 15, 22),
     BackgroundSecondary = Color3.fromRGB(22, 22, 30),
-    Surface             = Color3.fromRGB(30, 30, 42),
-    SurfaceHover        = Color3.fromRGB(42, 42, 58),
-    Border              = Color3.fromRGB(65, 65, 85),
+    Surface             = Color3.fromRGB(28, 28, 38),
+    SurfaceHover        = Color3.fromRGB(40, 40, 54),
+    Border              = Color3.fromRGB(60, 60, 80),
     BorderActive        = Color3.fromRGB(85, 170, 255),
     TextPrimary         = Color3.fromRGB(245, 245, 250),
-    TextSecondary       = Color3.fromRGB(160, 160, 180),
+    TextSecondary       = Color3.fromRGB(155, 155, 175),
     Accent              = Color3.fromRGB(85, 170, 255),
     AccentGlow          = Color3.fromRGB(120, 190, 255),
     Success             = Color3.fromRGB(80, 220, 140),
@@ -22,11 +22,11 @@ local Tokens = {
 }
 
 local Transparencies = {
-    BackgroundPrimary   = 0.18,
-    BackgroundSecondary = 0.22,
-    Surface             = 0.35,
-    SurfaceHover        = 0.25,
-    Border              = 0.30,
+    BackgroundPrimary   = 0.12,
+    BackgroundSecondary = 0.18,
+    Surface             = 0.30,
+    SurfaceHover        = 0.20,
+    Border              = 0.35,
     BorderActive        = 0.00,
 }
 
@@ -70,7 +70,7 @@ function ThemeManager.SetAccent(newAccent: Color3)
     for _, b in ipairs(Bindings) do
         if b.Key == "Accent" or b.Key == "BorderActive" or b.Key == "AccentGlow" then
             if b.Instance and b.Instance.Parent then
-                TweenService:Create(b.Instance, TweenInfo.new(0.40, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenService:Create(b.Instance, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     [b.Property] = Tokens[b.Key]
                 }):Play()
             end

@@ -27,6 +27,7 @@ end
 local ScreenHost = Instance.new("ScreenGui")
 ScreenHost.Name = "FishMenu_Host"
 ScreenHost.ResetOnSpawn = false
+ScreenHost.IgnoreGuiInset = true
 ScreenHost.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenHost.DisplayOrder = 100
 ScreenHost.Parent = TargetParent

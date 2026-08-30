@@ -1,5 +1,5 @@
 -- Modules/CharacterMods.lua
--- WalkSpeed, JumpPower, Infinite Jump, Noclip, Gravity, HipHeight & Anti-Ragdoll
+-- WalkSpeed, JumpPower, Infinite Jump, Stepped Noclip, Gravity, HipHeight & Spinbot
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -15,7 +15,6 @@ local CharacterMods = {
     HipHeight = 2,
     InfiniteJump = false,
     Noclip = false,
-    AntiRagdoll = false,
     Spinbot = false,
     NoclipConn = nil :: RBXScriptConnection?,
     SpinConn = nil :: RBXScriptConnection?,
@@ -91,7 +90,7 @@ function CharacterMods.SetSpinbot(enable: boolean)
             CharacterMods.SpinConn = RunService.RenderStepped:Connect(function()
                 local root = GetRoot()
                 if root and CharacterMods.Spinbot then
-                    root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(25), 0)
+                    root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(22), 0)
                 end
             end)
         end

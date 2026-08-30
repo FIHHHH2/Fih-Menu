@@ -1,8 +1,7 @@
 -- Modules/VisualsController.lua
--- Universal ESP, Tracers, Fullbright, World Ambient, and FOV Subsystem
+-- Universal 2D Box ESP, Name Tags, Chams Highlights, Fullbright & FOV
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 
@@ -11,28 +10,14 @@ local Camera = Workspace.CurrentCamera
 
 local VisualsController = {
     BoxESP = false,
-    Tracers = false,
     NameESP = false,
     Highlights = false,
     Fullbright = false,
     FOV = 70,
-    Crosshair = false,
-    ESPFolder = nil :: Folder?,
-    RenderConn = nil :: RBXScriptConnection?,
     OriginalBrightness = Lighting.Brightness,
     OriginalClockTime = Lighting.ClockTime,
     OriginalFogEnd = Lighting.FogEnd,
 }
-
-local function EnsureFolder(): Folder
-    if not VisualsController.ESPFolder or not VisualsController.ESPFolder.Parent then
-        local f = Instance.new("Folder")
-        f.Name = "Fih_VisualsHost"
-        f.Parent = Workspace
-        VisualsController.ESPFolder = f
-    end
-    return VisualsController.ESPFolder
-end
 
 function VisualsController.SetFOV(fov: number)
     VisualsController.FOV = fov
@@ -90,7 +75,7 @@ function VisualsController.SetBoxESP(enable: boolean)
                         local b = Instance.new("BillboardGui")
                         b.Name = "FihESP_Box"
                         b.Adornee = root
-                        b.Size = UDim2.new(4, 0, 5.5, 0)
+                        b.Size = UDim2.new(4.2, 0, 5.8, 0)
                         b.AlwaysOnTop = true
                         b.Parent = root
 
@@ -126,7 +111,7 @@ function VisualsController.SetNameESP(enable: boolean)
                         local b = Instance.new("BillboardGui")
                         b.Name = "FihESP_Name"
                         b.Adornee = head
-                        b.Size = UDim2.new(0, 120, 0, 25)
+                        b.Size = UDim2.new(0, 130, 0, 26)
                         b.StudsOffset = Vector3.new(0, 2.2, 0)
                         b.AlwaysOnTop = true
                         b.Parent = head
@@ -148,7 +133,6 @@ function VisualsController.SetNameESP(enable: boolean)
     end
 end
 
--- Refresh on Character Spawn
 Players.PlayerAdded:Connect(function(plr)
     plr.CharacterAdded:Connect(function()
         task.wait(0.5)

@@ -544,7 +544,6 @@ function MainMenu.new(
     for _, nav in ipairs(NavItems) do
         RegisterNavTab(nav)
     end
-    -- Pinned Themes section at bottom left
     RegisterNavTab("THEMES", true)
 
     ----------------------------------------------------------------------------
